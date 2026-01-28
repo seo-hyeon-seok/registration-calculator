@@ -640,20 +640,19 @@ document.addEventListener('DOMContentLoaded', function() {
         copyForMasterBtn.addEventListener('click', function() {
             if (!lastResult) return;
 
-            // 등기마스터 형식에 맞춘 데이터 (탭으로 구분)
-            const data = [
-                ['취득세', lastResult.acquisition.acquisitionTax],
-                ['지방교육세', lastResult.acquisition.educationTax],
-                ['농어촌특별세', lastResult.acquisition.ruralTax],
-                ['인지대', lastResult.stampTax],
-                ['증지대', lastResult.registrationFee],
-                ['일당 및 교통비', lastResult.transportFee],
-                ['보수료', lastResult.lawyerFee],
-                ['부가가치세', lastResult.lawyerVat],
-                ['합계', lastResult.grandTotal]
+            // 등기마스터 형식에 맞춘 데이터 (숫자만 탭으로 구분)
+            // 순서: 취득세, 지방교육세, 농어촌특별세, 인지대, 증지대, 보수료, 부가가치세
+            const values = [
+                lastResult.acquisition.acquisitionTax,
+                lastResult.acquisition.educationTax,
+                lastResult.acquisition.ruralTax,
+                lastResult.stampTax,
+                lastResult.registrationFee,
+                lastResult.lawyerFee,
+                lastResult.lawyerVat
             ];
 
-            const text = data.map(row => `${row[0]}\t${row[1]}`).join('\n');
+            const text = values.join('\t');
 
             navigator.clipboard.writeText(text).then(() => {
                 copyForMasterBtn.textContent = '복사 완료!';

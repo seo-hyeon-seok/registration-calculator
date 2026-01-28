@@ -1,0 +1,695 @@
+/**
+ * 부동산 등기비용 견적 계산기
+ * - 취득세, 국민주택채권, 등록면허세, 기타 비용 계산
+ */
+
+// ===== 상수 정의 =====
+
+// 지역 분류 (광역시/특별시 vs 기타 지역)
+const METRO_REGIONS = ['seoul', 'busan', 'daegu', 'incheon', 'gwangju', 'daejeon', 'ulsan', 'sejong'];
+
+// 도시철도채권 발행 지역 (해당 지역은 국민주택채권 대신 도시철도채권 매입)
+const METRO_BOND_REGIONS = ['seoul', 'busan', 'daegu', 'incheon', 'gwangju', 'daejeon'];
+
+// 주택 취득세율 (1주택 기준)
+const HOUSING_TAX_RATES = {
+    // 6억 이하: 1%
+    // 6억~9억: (취득가액 × 2/3억 - 3) / 100
+    // 9억 초과: 3%
+    under6: 0.01,
+    over9: 0.03
+};
+
+// 다주택자 취득세율 (조정지역)
+const MULTI_HOUSE_TAX_RATES = {
+    regulated: {
+        2: 0.08,  // 2주택
+        3: 0.12   // 3주택 이상
+    },
+    nonRegulated: {
+        2: 0.01,  // 2주택 (일반세율)
+        3: 0.08   // 3주택 이상
+    }
+};
+
+// 토지/상가 취득세율
+const PROPERTY_TAX_RATES = {
+    land: {
+        farm: 0.03,      // 농지
+        general: 0.04    // 일반토지
+    },
+    commercial: 0.04     // 상가/오피스텔
+};
+
+// 국민주택채권 매입률 (서울/광역시)
+const BOND_RATES_METRO = {
+    housing: [
+        { min: 0, max: 20000000, rate: 0 },           // 2천만 미만 면제
+        { min: 20000000, max: 50000000, rate: 0.013 },
+        { min: 50000000, max: 100000000, rate: 0.019 },
+        { min: 100000000, max: 160000000, rate: 0.021 },
+        { min: 160000000, max: 260000000, rate: 0.023 },
+        { min: 260000000, max: 600000000, rate: 0.026 },
+        { min: 600000000, max: Infinity, rate: 0.031 }
+    ],
+    land: [
+        { min: 0, max: 5000000, rate: 0 },            // 500만 미만 면제
+        { min: 5000000, max: 30000000, rate: 0.011 },
+        { min: 30000000, max: 50000000, rate: 0.013 },
+        { min: 50000000, max: 100000000, rate: 0.015 },
+        { min: 100000000, max: Infinity, rate: 0.017 }
+    ],
+    commercial: [
+        { min: 0, max: 10000000, rate: 0 },           // 1천만 미만 면제
+        { min: 10000000, max: 50000000, rate: 0.012 },
+        { min: 50000000, max: 100000000, rate: 0.014 },
+        { min: 100000000, max: 300000000, rate: 0.016 },
+        { min: 300000000, max: 500000000, rate: 0.018 },
+        { min: 500000000, max: Infinity, rate: 0.020 }
+    ]
+};
+
+// 국민주택채권 매입률 (기타 지역)
+const BOND_RATES_OTHER = {
+    housing: [
+        { min: 0, max: 20000000, rate: 0 },
+        { min: 20000000, max: 50000000, rate: 0.013 },
+        { min: 50000000, max: 100000000, rate: 0.014 },
+        { min: 100000000, max: 160000000, rate: 0.016 },
+        { min: 160000000, max: 260000000, rate: 0.018 },
+        { min: 260000000, max: 600000000, rate: 0.021 },
+        { min: 600000000, max: Infinity, rate: 0.026 }
+    ],
+    land: [
+        { min: 0, max: 5000000, rate: 0 },
+        { min: 5000000, max: 30000000, rate: 0.009 },
+        { min: 30000000, max: 50000000, rate: 0.011 },
+        { min: 50000000, max: 100000000, rate: 0.013 },
+        { min: 100000000, max: Infinity, rate: 0.015 }
+    ],
+    commercial: [
+        { min: 0, max: 10000000, rate: 0 },
+        { min: 10000000, max: 50000000, rate: 0.010 },
+        { min: 50000000, max: 100000000, rate: 0.012 },
+        { min: 100000000, max: 300000000, rate: 0.014 },
+        { min: 300000000, max: 500000000, rate: 0.016 },
+        { min: 500000000, max: Infinity, rate: 0.018 }
+    ]
+};
+
+// 인지세 기준 (일반)
+const STAMP_TAX = [
+    { min: 0, max: 10000000, amount: 0 },                    // 1천만원 이하: 면제
+    { min: 10000000, max: 30000000, amount: 20000 },         // 1천만원 초과~3천만원: 2만원
+    { min: 30000000, max: 50000000, amount: 40000 },         // 3천만원 초과~5천만원: 4만원
+    { min: 50000000, max: 100000000, amount: 70000 },        // 5천만원 초과~1억: 7만원
+    { min: 100000000, max: 1000000000, amount: 150000 },     // 1억 초과~10억: 15만원
+    { min: 1000000000, max: Infinity, amount: 350000 }       // 10억 초과: 35만원
+];
+
+// 등기신청수수료 (증지)
+const REGISTRATION_FEE = 15000;  // 기본 15,000원
+
+// ===== 유틸리티 함수 =====
+
+/**
+ * 숫자를 한글로 변환
+ */
+function numberToKorean(num) {
+    if (num === 0) return '영';
+
+    const units = ['', '만', '억', '조'];
+    const digits = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+    const subUnits = ['', '십', '백', '천'];
+
+    let result = '';
+    let unitIndex = 0;
+
+    while (num > 0) {
+        const part = num % 10000;
+        if (part > 0) {
+            let partStr = '';
+            let tempPart = part;
+            let subIndex = 0;
+
+            while (tempPart > 0) {
+                const digit = tempPart % 10;
+                if (digit > 0) {
+                    if (subIndex === 0) {
+                        partStr = digits[digit] + partStr;
+                    } else {
+                        partStr = (digit === 1 ? '' : digits[digit]) + subUnits[subIndex] + partStr;
+                    }
+                }
+                tempPart = Math.floor(tempPart / 10);
+                subIndex++;
+            }
+
+            result = partStr + units[unitIndex] + ' ' + result;
+        }
+        num = Math.floor(num / 10000);
+        unitIndex++;
+    }
+
+    return result.trim() + '원';
+}
+
+/**
+ * 숫자 포맷팅 (천단위 콤마)
+ */
+function formatNumber(num) {
+    return new Intl.NumberFormat('ko-KR').format(Math.round(num));
+}
+
+/**
+ * 입력값에서 숫자만 추출
+ */
+function parseInputNumber(str) {
+    if (!str) return 0;
+    return parseInt(str.replace(/[^0-9]/g, ''), 10) || 0;
+}
+
+/**
+ * 만원 단위로 반올림 (5천원 기준)
+ */
+function roundToTenThousand(num) {
+    const remainder = num % 10000;
+    if (remainder >= 5000) {
+        return num - remainder + 10000;
+    }
+    return num - remainder;
+}
+
+// ===== 계산 함수 =====
+
+/**
+ * 취득세 계산
+ */
+function calculateAcquisitionTax(params) {
+    const { propertyType, salePrice, houseCount, isRegulated, taxDiscountType, landType, isUnder85sqm } = params;
+
+    let taxRate = 0;
+    let ruralTaxRate = 0;          // 농어촌특별세
+    let note = '';
+    let isHousing = (propertyType === 'apartment');
+
+    if (propertyType === 'apartment') {
+        // 주택/아파트
+        if (houseCount === 1 || !isRegulated) {
+            // 1주택 또는 비조정지역
+            if (salePrice <= 600000000) {
+                taxRate = 0.01;
+                note = '6억원 이하 1주택 기본세율 1% 적용';
+            } else if (salePrice <= 900000000) {
+                // 6억~9억: 누진세율
+                taxRate = (salePrice * 2 / 300000000 - 3) / 100;
+                note = '6억~9억 구간 누진세율 적용';
+            } else {
+                taxRate = 0.03;
+                note = '9억원 초과 세율 3% 적용';
+            }
+
+            // 감면 적용 표시
+            if (taxDiscountType === 'firstTime') {
+                note += ' (생애최초 감면 적용)';
+            } else if (taxDiscountType === 'newborn') {
+                note += ' (신생아 감면 적용)';
+            }
+        } else if (houseCount === 2 && isRegulated) {
+            taxRate = 0.08;
+            note = '조정지역 2주택 중과세율 8% 적용';
+        } else {
+            taxRate = 0.12;
+            note = '3주택 이상 중과세율 12% 적용';
+        }
+
+        // 85㎡ 초과 주택은 농어촌특별세 부과
+        if (!isUnder85sqm) {
+            ruralTaxRate = 0.002;  // 0.2%
+            note += ' (85㎡ 초과 농특세 부과)';
+        }
+
+    } else if (propertyType === 'land') {
+        // 농지/토지
+        if (landType === 'farm') {
+            taxRate = 0.03;
+            note = '농지 취득세율 3% 적용';
+            ruralTaxRate = 0.002;
+        } else {
+            taxRate = 0.04;
+            note = '일반토지 취득세율 4% 적용';
+            ruralTaxRate = 0.002;
+        }
+
+    } else {
+        // 상가/오피스텔
+        taxRate = 0.04;
+        note = '상가/오피스텔 취득세율 4% 적용';
+        ruralTaxRate = 0.002;
+    }
+
+    // 취득세 계산
+    let acquisitionTax = salePrice * taxRate;
+
+    // 지방교육세 계산
+    let educationTax;
+    if (isHousing) {
+        // 주택: 취득세 × 10%
+        educationTax = acquisitionTax * 0.1;
+    } else {
+        // 비주택: 매매대금 × 0.4%
+        educationTax = salePrice * 0.004;
+    }
+
+    // 농어촌특별세
+    let ruralTax = salePrice * ruralTaxRate;
+
+    // 감면 적용 (주택 1주택자만)
+    if (propertyType === 'apartment' && houseCount === 1) {
+        if (taxDiscountType === 'firstTime') {
+            // 생애최초 감면: 취득세 200만원, 교육세 20만원
+            acquisitionTax = Math.max(0, acquisitionTax - 2000000);
+            educationTax = Math.max(0, educationTax - 200000);
+        } else if (taxDiscountType === 'newborn') {
+            // 신생아 감면: 취득세 500만원, 교육세 50만원
+            acquisitionTax = Math.max(0, acquisitionTax - 5000000);
+            educationTax = Math.max(0, educationTax - 500000);
+        }
+    }
+
+    return {
+        acquisitionTax: Math.round(acquisitionTax),
+        educationTax: Math.round(educationTax),
+        ruralTax: Math.round(ruralTax),
+        total: Math.round(acquisitionTax) + Math.round(educationTax) + Math.round(ruralTax),
+        taxRate,
+        note
+    };
+}
+
+/**
+ * 국민주택채권 매입액 계산
+ */
+function calculateBond(params) {
+    const { propertyType, standardPrice, region, bondDiscountRate } = params;
+
+    // 시가표준액이 없으면 채권 계산 건너뜀
+    if (!standardPrice || standardPrice === 0) {
+        return {
+            bondAmount: 0,
+            bondRate: 0,
+            bondRatePercent: '0.00',
+            discountAmount: 0,
+            discountRate: bondDiscountRate
+        };
+    }
+
+    const isMetro = region === 'metro';
+    const bondRates = isMetro ? BOND_RATES_METRO : BOND_RATES_OTHER;
+
+    let typeKey = propertyType;
+    if (propertyType === 'apartment') typeKey = 'housing';
+
+    const rates = bondRates[typeKey] || bondRates.commercial;
+
+    // 시가표준액에 해당하는 매입률 찾기
+    let bondRate = 0;
+    for (const bracket of rates) {
+        if (standardPrice >= bracket.min && standardPrice < bracket.max) {
+            bondRate = bracket.rate;
+            break;
+        }
+    }
+
+    // 채권매입액 계산 (만원 단위 반올림)
+    const bondAmount = roundToTenThousand(standardPrice * bondRate);
+
+    // 할인매도시 실제 부담액
+    const discountRate = bondDiscountRate / 100;
+    const actualCost = Math.round(bondAmount * discountRate);
+
+    return {
+        bondAmount,
+        bondRate,
+        bondRatePercent: (bondRate * 100).toFixed(2),
+        discountAmount: actualCost,
+        discountRate: bondDiscountRate
+    };
+}
+
+/**
+ * 인지세 계산
+ * @param {number} salePrice - 매매대금
+ * @param {string} propertyType - 부동산 유형 (apartment: 주거건물 1억 이하 면제)
+ */
+function calculateStampTax(salePrice, propertyType) {
+    // 주거건물 이전시 매매대금 1억원 이하인 경우 인지면제
+    if (propertyType === 'apartment' && salePrice <= 100000000) {
+        return 0;
+    }
+
+    for (const bracket of STAMP_TAX) {
+        if (salePrice > bracket.min && salePrice <= bracket.max) {
+            return bracket.amount;
+        }
+    }
+    // 1천만원 이하
+    if (salePrice <= 10000000) {
+        return 0;
+    }
+    return 350000; // 10억 초과
+}
+
+/**
+ * 법무사 수수료 계산
+ * - 6억 이하: 25만원
+ * - 6억 초과 ~ 10억: 30만원
+ * - 10억 초과 ~ 20억: 35만원
+ * - 20억 초과: 40만원
+ */
+function calculateLawyerFee(salePrice) {
+    let fee = 0;
+
+    if (salePrice <= 600000000) {
+        fee = 250000;
+    } else if (salePrice <= 1000000000) {
+        fee = 300000;
+    } else if (salePrice <= 2000000000) {
+        fee = 350000;
+    } else {
+        fee = 400000;
+    }
+
+    const baseFee = fee;
+    const vat = Math.round(fee * 0.1);
+
+    return {
+        baseFee,      // 보수료 (부가세 제외)
+        vat,          // 부가가치세
+        total: baseFee + vat  // 합계
+    };
+}
+
+/**
+ * 전체 비용 계산
+ */
+function calculateTotal(params) {
+    const acquisitionResult = calculateAcquisitionTax(params);
+    const bondResult = calculateBond(params);
+    const stampTax = calculateStampTax(params.salePrice, params.propertyType);
+    const lawyerFeeResult = calculateLawyerFee(params.salePrice);
+    const transportFee = params.transportFee || 50000;
+
+    const otherTotal = stampTax + REGISTRATION_FEE + transportFee + lawyerFeeResult.total;
+
+    const grandTotal =
+        acquisitionResult.total +
+        bondResult.discountAmount +
+        otherTotal;
+
+    return {
+        acquisition: acquisitionResult,
+        bond: bondResult,
+        stampTax,
+        registrationFee: REGISTRATION_FEE,
+        transportFee,
+        lawyerFee: lawyerFeeResult.baseFee,
+        lawyerVat: lawyerFeeResult.vat,
+        lawyerTotal: lawyerFeeResult.total,
+        otherTotal,
+        grandTotal
+    };
+}
+
+// ===== UI 제어 =====
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 요소 참조
+    const propertyTypeBtns = document.querySelectorAll('.property-type-btn');
+    const housingOptions = document.getElementById('housingOptions');
+    const landOptions = document.getElementById('landOptions');
+    const sectionNumber = document.getElementById('sectionNumber');
+    const salePriceInput = document.getElementById('salePrice');
+    const standardPriceInput = document.getElementById('standardPrice');
+    const bondRateInput = document.getElementById('bondRate');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resultSection = document.getElementById('resultSection');
+
+    let currentPropertyType = 'apartment';
+
+    // 주소 검색 버튼
+    const searchAddressBtn = document.getElementById('searchAddressBtn');
+    const addressInput = document.getElementById('address');
+    const regionRadios = document.querySelectorAll('input[name="region"]');
+
+    if (searchAddressBtn) {
+        searchAddressBtn.addEventListener('click', function() {
+            // daum API 로드 확인
+            if (typeof daum === 'undefined' || typeof daum.Postcode === 'undefined') {
+                alert('주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+                return;
+            }
+
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    // 도로명 주소 또는 지번 주소
+                    let fullAddress = data.address;
+
+                    // 상세주소가 있으면 추가
+                    if (data.buildingName) {
+                        fullAddress += ' (' + data.buildingName + ')';
+                    }
+
+                    addressInput.value = fullAddress;
+
+                    // 지역 자동 선택 (특별시/광역시 vs 기타지역)
+                    const sido = data.sido;
+                    const metroList = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종'];
+                    const isMetro = metroList.some(metro => sido.includes(metro));
+
+                    regionRadios.forEach(radio => {
+                        if (isMetro && radio.value === 'metro') {
+                            radio.checked = true;
+                        } else if (!isMetro && radio.value === 'other') {
+                            radio.checked = true;
+                        }
+                    });
+                }
+            }).open();
+        });
+    }
+
+    // 부동산 유형 선택
+    propertyTypeBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            propertyTypeBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentPropertyType = this.dataset.type;
+
+            // 옵션 섹션 표시/숨김
+            housingOptions.classList.toggle('hidden', currentPropertyType !== 'apartment');
+            landOptions.classList.toggle('hidden', currentPropertyType !== 'land');
+
+            // 섹션 번호 업데이트
+            sectionNumber.textContent = (currentPropertyType === 'apartment' || currentPropertyType === 'land') ? '3' : '2';
+        });
+    });
+
+    // 금액 입력 시 한글 변환 및 포맷팅
+    function handlePriceInput(input, koreanSpan) {
+        input.addEventListener('input', function() {
+            const value = parseInputNumber(this.value);
+            if (value > 0) {
+                this.value = formatNumber(value);
+                document.getElementById(koreanSpan).textContent = numberToKorean(value);
+            } else {
+                document.getElementById(koreanSpan).textContent = '';
+            }
+        });
+    }
+
+    handlePriceInput(salePriceInput, 'salePriceKorean');
+    handlePriceInput(standardPriceInput, 'standardPriceKorean');
+
+    // 계산 함수
+    function doCalculate() {
+        const salePrice = parseInputNumber(salePriceInput.value);
+        const standardPrice = parseInputNumber(standardPriceInput.value);
+        const bondDiscountRate = parseFloat(bondRateInput.value) || 4.5;
+
+        if (salePrice === 0) {
+            alert('매매대금을 입력해주세요.');
+            salePriceInput.focus();
+            return;
+        }
+
+        // 시가표준액이 없으면 채권 계산 건너뜀 (선택 사항)
+
+        // 파라미터 수집
+        const houseCountRadio = document.querySelector('input[name="houseCount"]:checked');
+        const regulatedRadio = document.querySelector('input[name="regulated"]:checked');
+        const landTypeRadio = document.querySelector('input[name="landType"]:checked');
+        const taxDiscountRadio = document.querySelector('input[name="taxDiscount"]:checked');
+
+        const regionRadio = document.querySelector('input[name="region"]:checked');
+        const under85sqmCheckbox = document.getElementById('under85sqm');
+
+        const transportFeeInput = document.getElementById('transportFee');
+        const transportFee = parseInputNumber(transportFeeInput.value) || 50000;
+
+        const params = {
+            propertyType: currentPropertyType,
+            salePrice: salePrice,
+            standardPrice: standardPrice,
+            region: regionRadio ? regionRadio.value : 'other',
+            houseCount: houseCountRadio ? parseInt(houseCountRadio.value) : 1,
+            isRegulated: regulatedRadio ? regulatedRadio.value === 'yes' : false,
+            taxDiscountType: taxDiscountRadio ? taxDiscountRadio.value : 'none',
+            isUnder85sqm: under85sqmCheckbox ? under85sqmCheckbox.checked : true,
+            landType: landTypeRadio ? landTypeRadio.value : 'general',
+            bondDiscountRate: bondDiscountRate,
+            transportFee: transportFee
+        };
+
+        // 계산 실행
+        const result = calculateTotal(params);
+
+        // 결과 표시
+        displayResults(result);
+
+        // 결과 섹션 표시 및 스크롤
+        resultSection.classList.remove('hidden');
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // 계산 버튼 클릭 이벤트
+    calculateBtn.addEventListener('click', doCalculate);
+
+    // 결과 표시 함수
+    let lastResult = null;
+
+    function displayResults(result) {
+        lastResult = result;
+
+        // 취득세
+        document.getElementById('acquisitionTax').textContent = formatNumber(result.acquisition.acquisitionTax) + '원';
+        document.getElementById('educationTax').textContent = formatNumber(result.acquisition.educationTax) + '원';
+        document.getElementById('ruralTax').textContent = formatNumber(result.acquisition.ruralTax) + '원';
+        document.getElementById('acquisitionTaxTotal').textContent = formatNumber(result.acquisition.total) + '원';
+        document.getElementById('taxNote').textContent = result.acquisition.note;
+
+        // 국민주택채권
+        document.getElementById('bondAmount').textContent = formatNumber(result.bond.bondAmount) + '원';
+        document.getElementById('bondRate2').textContent = result.bond.bondRatePercent + '%';
+        document.getElementById('bondDiscount').textContent = formatNumber(result.bond.discountAmount) + '원';
+        document.getElementById('bondTotal').textContent = formatNumber(result.bond.discountAmount) + '원';
+
+        // 기타 비용
+        document.getElementById('stampTax').textContent = formatNumber(result.stampTax) + '원';
+        document.getElementById('registrationFee').textContent = formatNumber(result.registrationFee) + '원';
+        document.getElementById('transportFeeResult').textContent = formatNumber(result.transportFee) + '원';
+        document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerFee) + '원';
+        document.getElementById('lawyerVat').textContent = formatNumber(result.lawyerVat) + '원';
+        document.getElementById('otherTotal').textContent = formatNumber(result.otherTotal) + '원';
+
+        // 총 비용
+        document.getElementById('grandTotal').textContent = formatNumber(result.grandTotal) + '원';
+        document.getElementById('summaryTax').textContent = formatNumber(result.acquisition.total) + '원';
+        document.getElementById('summaryBond').textContent = formatNumber(result.bond.discountAmount) + '원';
+        document.getElementById('summaryOther').textContent = formatNumber(result.otherTotal) + '원';
+    }
+
+    // 복사 버튼 이벤트
+    const copyAllBtn = document.getElementById('copyAllBtn');
+    const copyForMasterBtn = document.getElementById('copyForMasterBtn');
+
+    if (copyAllBtn) {
+        copyAllBtn.addEventListener('click', function() {
+            if (!lastResult) return;
+
+            const text = `[등기비용 견적]
+
+취득세: ${formatNumber(lastResult.acquisition.acquisitionTax)}원
+지방교육세: ${formatNumber(lastResult.acquisition.educationTax)}원
+농어촌특별세: ${formatNumber(lastResult.acquisition.ruralTax)}원
+소계: ${formatNumber(lastResult.acquisition.total)}원
+
+국민주택채권 매입액: ${formatNumber(lastResult.bond.bondAmount)}원
+채권 할인부담금: ${formatNumber(lastResult.bond.discountAmount)}원
+
+인지대: ${formatNumber(lastResult.stampTax)}원
+증지대: ${formatNumber(lastResult.registrationFee)}원
+일당 및 교통비: ${formatNumber(lastResult.transportFee)}원
+보수료: ${formatNumber(lastResult.lawyerFee)}원
+부가가치세: ${formatNumber(lastResult.lawyerVat)}원
+
+총 등기비용: ${formatNumber(lastResult.grandTotal)}원`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                copyAllBtn.textContent = '복사 완료!';
+                copyAllBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyAllBtn.textContent = '전체 결과 복사';
+                    copyAllBtn.classList.remove('copied');
+                }, 2000);
+            });
+        });
+    }
+
+    if (copyForMasterBtn) {
+        copyForMasterBtn.addEventListener('click', function() {
+            if (!lastResult) return;
+
+            // 등기마스터 형식에 맞춘 데이터 (탭으로 구분)
+            const data = [
+                ['취득세', lastResult.acquisition.acquisitionTax],
+                ['지방교육세', lastResult.acquisition.educationTax],
+                ['농어촌특별세', lastResult.acquisition.ruralTax],
+                ['인지대', lastResult.stampTax],
+                ['증지대', lastResult.registrationFee],
+                ['일당 및 교통비', lastResult.transportFee],
+                ['보수료', lastResult.lawyerFee],
+                ['부가가치세', lastResult.lawyerVat],
+                ['합계', lastResult.grandTotal]
+            ];
+
+            const text = data.map(row => `${row[0]}\t${row[1]}`).join('\n');
+
+            navigator.clipboard.writeText(text).then(() => {
+                copyForMasterBtn.textContent = '복사 완료!';
+                copyForMasterBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyForMasterBtn.textContent = '등기마스터용 복사';
+                    copyForMasterBtn.classList.remove('copied');
+                }, 2000);
+            });
+        });
+    }
+
+    // 일당 및 교통비 입력 포맷팅
+    const transportFeeInput = document.getElementById('transportFee');
+    if (transportFeeInput) {
+        transportFeeInput.addEventListener('input', function() {
+            const value = parseInputNumber(this.value);
+            if (value > 0) {
+                this.value = formatNumber(value);
+            }
+        });
+    }
+
+    // 시가표준액 찾기 버튼
+    const searchStandardPriceBtn = document.getElementById('searchStandardPriceBtn');
+    if (searchStandardPriceBtn) {
+        searchStandardPriceBtn.addEventListener('click', function() {
+            window.open('https://www.realtyprice.kr/notice/town/nfSiteLink.htm', '_blank');
+        });
+    }
+
+    // 채권할인율 찾기 버튼
+    const searchBondRateBtn = document.getElementById('searchBondRateBtn');
+    if (searchBondRateBtn) {
+        searchBondRateBtn.addEventListener('click', function() {
+            window.open('http://www.n6104.co.kr/index.asp', '_blank');
+        });
+    }
+});

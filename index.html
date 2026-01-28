@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부동산 등기비용 계산기</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Daum 우편번호 서비스 -->
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-decoration"></div>
+            <h1>부동산 등기비용 계산기</h1>
+            <p class="subtitle">취득세, 국민주택채권, 법무사 수수료까지 한번에 계산</p>
+            <div class="header-particles">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+        </header>
+
+        <main>
+            <!-- 부동산 유형 선택 -->
+            <section class="input-section">
+                <h2>1. 부동산 유형 선택</h2>
+                <div class="property-type-grid">
+                    <button class="property-type-btn active" data-type="apartment">
+                        <span class="icon">🏢</span>
+                        <span class="label">주택/아파트</span>
+                    </button>
+                    <button class="property-type-btn" data-type="land">
+                        <span class="icon">🌾</span>
+                        <span class="label">농지/토지</span>
+                    </button>
+                    <button class="property-type-btn" data-type="commercial">
+                        <span class="icon">🏬</span>
+                        <span class="label">상가/오피스텔</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 주택 추가 옵션 (주택/아파트 선택시만 표시) -->
+            <section class="input-section housing-options" id="housingOptions">
+                <h2>2. 주택 상세 옵션</h2>
+                <div class="option-group">
+                    <label>보유 주택 수</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="houseCount" value="1" checked>
+                            <span>1주택</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="houseCount" value="2">
+                            <span>2주택</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="houseCount" value="3">
+                            <span>3주택 이상</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="option-group">
+                    <label>조정대상지역 여부</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="regulated" value="no" checked>
+                            <span>비조정지역</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="regulated" value="yes">
+                            <span>조정대상지역</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="option-group">
+                    <label>취득세 감면</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="taxDiscount" value="none" checked>
+                            <span>감면없음</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="taxDiscount" value="firstTime">
+                            <span>생애최초 (200만원)</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="taxDiscount" value="newborn">
+                            <span>신생아 (500만원)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="under85sqm" checked>
+                        전용면적 85㎡ 이하
+                    </label>
+                </div>
+            </section>
+
+            <!-- 토지 추가 옵션 -->
+            <section class="input-section land-options hidden" id="landOptions">
+                <h2>2. 토지 상세 옵션</h2>
+                <div class="option-group">
+                    <label>토지 유형</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="landType" value="farm" checked>
+                            <span>농지</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="landType" value="general">
+                            <span>일반 토지</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 지역 및 금액 입력 -->
+            <section class="input-section">
+                <h2><span id="sectionNumber">3</span>. 지역 및 금액 정보</h2>
+
+                <div class="option-group">
+                    <label>지역 선택</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="region" value="metro">
+                            <span>특별·광역시</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="region" value="other" checked>
+                            <span>기타지역</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">부동산 주소</label>
+                    <div class="input-with-button">
+                        <input type="text" id="address" placeholder="예: 서울시 강남구 역삼동 123-45">
+                        <button type="button" class="search-btn" id="searchAddressBtn">찾기</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="salePrice">매매대금 (원)</label>
+                    <input type="text" id="salePrice" placeholder="예: 500,000,000" inputmode="numeric">
+                    <span class="price-korean" id="salePriceKorean"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="standardPrice">시가표준액 (공시지가/공시가격) (원)</label>
+                    <div class="input-with-button">
+                        <input type="text" id="standardPrice" placeholder="예: 400,000,000" inputmode="numeric">
+                        <button type="button" class="search-btn" id="searchStandardPriceBtn">찾기</button>
+                    </div>
+                    <span class="price-korean" id="standardPriceKorean"></span>
+                    <p class="helper-text">
+                        * 시가표준액을 모르시면 매매대금의 70~80% 수준으로 입력하세요.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="bondRate">오늘의 채권할인율 (%)</label>
+                    <div class="input-with-button">
+                        <input type="text" id="bondRate" value="11.8" placeholder="예: 11.8">
+                        <button type="button" class="search-btn" id="searchBondRateBtn">찾기</button>
+                    </div>
+                    <p class="helper-text">
+                        * 채권할인율은 매일 변동됩니다.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="transportFee">일당 및 교통비 (원)</label>
+                    <input type="text" id="transportFee" value="50,000" placeholder="예: 50,000" inputmode="numeric">
+                </div>
+            </section>
+
+            <!-- 계산 버튼 -->
+            <button class="calculate-btn" id="calculateBtn">
+                등기비용 계산하기
+            </button>
+
+            <!-- 결과 표시 -->
+            <section class="result-section hidden" id="resultSection">
+                <h2>등기비용 견적 결과</h2>
+
+                <!-- 취득세 -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <h3>취득세 관련</h3>
+                        <span class="result-total" id="acquisitionTaxTotal">0원</span>
+                    </div>
+                    <div class="result-details">
+                        <div class="result-row">
+                            <span>취득세</span>
+                            <span id="acquisitionTax">0원</span>
+                        </div>
+                        <div class="result-row">
+                            <span>지방교육세</span>
+                            <span id="educationTax">0원</span>
+                        </div>
+                        <div class="result-row">
+                            <span>농어촌특별세</span>
+                            <span id="ruralTax">0원</span>
+                        </div>
+                    </div>
+                    <div class="result-note" id="taxNote"></div>
+                </div>
+
+                <!-- 국민주택채권 -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <h3>국민주택채권</h3>
+                        <span class="result-total" id="bondTotal">0원</span>
+                    </div>
+                    <div class="result-details">
+                        <div class="result-row">
+                            <span>채권매입액</span>
+                            <span id="bondAmount">0원</span>
+                        </div>
+                        <div class="result-row">
+                            <span>채권매입률</span>
+                            <span id="bondRate2">0%</span>
+                        </div>
+                        <div class="result-row highlight">
+                            <span>실제 부담액 (할인매도시)</span>
+                            <span id="bondDiscount">0원</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 기타 비용 -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <h3>기타 비용</h3>
+                        <span class="result-total" id="otherTotal">0원</span>
+                    </div>
+                    <div class="result-details">
+                        <div class="result-row">
+                            <span>인지대</span>
+                            <span id="stampTax">0원</span>
+                        </div>
+                        <div class="result-row">
+                            <span>증지대</span>
+                            <span id="registrationFee">0원</span>
+                        </div>
+                        <div class="result-row">
+                            <span>일당 및 교통비</span>
+                            <span id="transportFeeResult">0원</span>
+                        </div>
+                        <div class="result-row">
+                            <span>보수료</span>
+                            <span id="lawyerFee">0원</span>
+                        </div>
+                        <div class="result-row">
+                            <span>부가가치세</span>
+                            <span id="lawyerVat">0원</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 총 비용 -->
+                <div class="result-card total-card">
+                    <div class="result-header">
+                        <h3>총 등기비용</h3>
+                        <span class="result-total grand-total" id="grandTotal">0원</span>
+                    </div>
+                    <div class="result-breakdown">
+                        <div class="breakdown-item">
+                            <span>취득세 관련</span>
+                            <span id="summaryTax">0원</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>채권 할인부담금</span>
+                            <span id="summaryBond">0원</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>기타 비용</span>
+                            <span id="summaryOther">0원</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 복사 버튼 -->
+                <div class="copy-buttons">
+                    <button class="copy-btn" id="copyAllBtn">전체 결과 복사</button>
+                    <button class="copy-btn secondary" id="copyForMasterBtn">등기마스터용 복사</button>
+                </div>
+
+                <div class="disclaimer">
+                    <p><strong>※ 주의사항</strong></p>
+                    <ul>
+                        <li>본 계산 결과는 예상 금액이며, 실제 비용과 차이가 있을 수 있습니다.</li>
+                        <li>감면 혜택 등 개별 상황에 따라 금액이 달라질 수 있습니다.</li>
+                        <li>정확한 금액은 관할 시청/구청 또는 법무사에게 문의하세요.</li>
+                        <li>채권할인율은 매일 변동되므로 당일 확인이 필요합니다.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>본 계산기는 참고용이며 실제 세금 및 비용과 차이가 있을 수 있습니다.</p>
+            <p>정확한 금액은 관할 관청 또는 법무사에게 문의하세요.</p>
+        </footer>
+    </div>
+
+    <script src="calculator.js"></script>
+</body>
+</html>

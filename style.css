@@ -1,3 +1,11 @@
+/* 다온폰트 볼라체 */
+@font-face {
+    font-family: 'DaOnBola';
+    src: url('DAON_BOLA.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 /* Reset & Base */
 * {
     margin: 0;

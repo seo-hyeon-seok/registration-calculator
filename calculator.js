@@ -740,9 +740,12 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('lawyerDiscountRow').style.display = 'flex';
             document.getElementById('lawyerDiscountLabel').textContent = '할인 -' + result.lawyerDiscountRate + '%';
             document.getElementById('lawyerDiscountAmount').textContent = '-' + formatNumber(result.lawyerDiscountAmount) + '원';
+            document.getElementById('lawyerDiscountedFeeRow').style.display = 'flex';
+            document.getElementById('lawyerDiscountedFee').textContent = formatNumber(result.lawyerFee) + '원';
         } else {
             document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerFee) + '원';
             document.getElementById('lawyerDiscountRow').style.display = 'none';
+            document.getElementById('lawyerDiscountedFeeRow').style.display = 'none';
         }
         document.getElementById('lawyerVat').textContent = formatNumber(result.lawyerVat) + '원';
         document.getElementById('otherTotal').textContent = formatNumber(result.otherTotal) + '원';

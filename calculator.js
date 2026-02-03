@@ -107,8 +107,36 @@ const STAMP_TAX = [
     { min: 1000000000, max: Infinity, amount: 350000 }       // 10억 초과: 35만원
 ];
 
-// 등기신청수수료 (증지)
-const REGISTRATION_FEE = 15000;  // 기본 15,000원
+// 플랫폼별 설정
+const PLATFORM_CONFIG = {
+    general: {
+        name: '일반',
+        registrationFee: 18000,      // 증지대
+        transportFee: 70000,          // 교통비
+        bondServiceFee: 40000,        // 채권 매입매도신청
+        taxReportFee: 30000,          // 취득세 신고 납부
+        submissionFee: 20000,         // 제출대행 및 우편료
+        certFee: 20000                // 제증명료
+    },
+    master: {
+        name: '등기마스터',
+        registrationFee: 15000,
+        transportFee: 50000,
+        bondServiceFee: 0,
+        taxReportFee: 0,
+        submissionFee: 0,
+        certFee: 0
+    },
+    bubtong: {
+        name: '법무통',
+        registrationFee: 15000,
+        transportFee: 50000,
+        bondServiceFee: 0,
+        taxReportFee: 0,
+        submissionFee: 0,
+        certFee: 0
+    }
+};
 
 // ===== 유틸리티 함수 =====
 
@@ -371,13 +399,46 @@ function calculateStampTax(salePrice, propertyType) {
 }
 
 /**
- * 법무사 수수료 계산
- * - 6억 이하: 25만원
- * - 6억 초과 ~ 10억: 30만원
- * - 10억 초과 ~ 20억: 35만원
- * - 20억 초과: 40만원
+ * 법무사 수수료 계산 (일반 플랫폼용 - 누진 계산)
  */
-function calculateLawyerFee(salePrice) {
+function calculateLawyerFeeGeneral(salePrice) {
+    let fee = 0;
+
+    if (salePrice <= 10000000) {
+        fee = 100000;
+    } else if (salePrice < 50000000) {
+        fee = (salePrice - 10000000) * 0.0011 + 100000;
+    } else if (salePrice < 100000000) {
+        fee = (salePrice - 50000000) * 0.001 + 144000;
+    } else if (salePrice < 300000000) {
+        fee = (salePrice - 100000000) * 0.0009 + 194000;
+    } else if (salePrice < 500000000) {
+        fee = (salePrice - 300000000) * 0.0008 + 374000;
+    } else if (salePrice < 1000000000) {
+        fee = (salePrice - 500000000) * 0.0007 + 534000;
+    } else if (salePrice < 2000000000) {
+        fee = (salePrice - 1000000000) * 0.0005 + 884000;
+    } else {
+        fee = (salePrice - 2000000000) * 0.0004 + 1384000;
+    }
+
+    // 기본 수수료 66,000원 추가
+    fee = Math.round(fee) + 66000;
+
+    const baseFee = fee;
+    const vat = Math.round(fee * 0.1);
+
+    return {
+        baseFee,
+        vat,
+        total: baseFee + vat
+    };
+}
+
+/**
+ * 법무사 수수료 계산 (등기마스터/법무통용 - 구간별 고정)
+ */
+function calculateLawyerFeeMaster(salePrice) {
     let fee = 0;
 
     if (salePrice <= 600000000) {
@@ -404,13 +465,29 @@ function calculateLawyerFee(salePrice) {
  * 전체 비용 계산
  */
 function calculateTotal(params) {
+    const platform = params.platform || 'general';
+    const config = PLATFORM_CONFIG[platform];
+
     const acquisitionResult = calculateAcquisitionTax(params);
     const bondResult = calculateBond(params);
     const stampTax = calculateStampTax(params.salePrice, params.propertyType);
-    const lawyerFeeResult = calculateLawyerFee(params.salePrice);
-    const transportFee = params.transportFee || 50000;
 
-    const otherTotal = stampTax + REGISTRATION_FEE + transportFee + lawyerFeeResult.total;
+    // 플랫폼별 법무사 수수료 계산
+    let lawyerFeeResult;
+    if (platform === 'general') {
+        lawyerFeeResult = calculateLawyerFeeGeneral(params.salePrice);
+    } else {
+        lawyerFeeResult = calculateLawyerFeeMaster(params.salePrice);
+    }
+
+    // 플랫폼별 고정 비용
+    const registrationFee = config.registrationFee;
+    const transportFee = params.transportFee || config.transportFee;
+
+    // 일반 플랫폼 추가 비용
+    const additionalFees = config.bondServiceFee + config.taxReportFee + config.submissionFee + config.certFee;
+
+    const otherTotal = stampTax + registrationFee + transportFee + lawyerFeeResult.total + additionalFees;
 
     const grandTotal =
         acquisitionResult.total +
@@ -418,14 +495,20 @@ function calculateTotal(params) {
         otherTotal;
 
     return {
+        platform,
         acquisition: acquisitionResult,
         bond: bondResult,
         stampTax,
-        registrationFee: REGISTRATION_FEE,
+        registrationFee,
         transportFee,
         lawyerFee: lawyerFeeResult.baseFee,
         lawyerVat: lawyerFeeResult.vat,
         lawyerTotal: lawyerFeeResult.total,
+        additionalFees,
+        bondServiceFee: config.bondServiceFee,
+        taxReportFee: config.taxReportFee,
+        submissionFee: config.submissionFee,
+        certFee: config.certFee,
         otherTotal,
         grandTotal
     };
@@ -446,6 +529,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultSection = document.getElementById('resultSection');
 
     let currentPropertyType = 'apartment';
+    let currentPlatform = 'general';
+
+    // 플랫폼 선택
+    const platformBtns = document.querySelectorAll('.platform-btn');
+    platformBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            platformBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentPlatform = this.dataset.platform;
+
+            // 플랫폼에 따른 기본값 설정
+            const config = PLATFORM_CONFIG[currentPlatform];
+            const transportFeeInput = document.getElementById('transportFee');
+            if (transportFeeInput) {
+                transportFeeInput.value = formatNumber(config.transportFee);
+            }
+        });
+    });
 
     // 주소 검색 버튼
     const searchAddressBtn = document.getElementById('searchAddressBtn');
@@ -501,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function() {
             landOptions.classList.toggle('hidden', currentPropertyType !== 'land');
 
             // 섹션 번호 업데이트
-            sectionNumber.textContent = (currentPropertyType === 'apartment' || currentPropertyType === 'land') ? '3' : '2';
+            sectionNumber.textContent = (currentPropertyType === 'apartment' || currentPropertyType === 'land') ? '4' : '3';
         });
     });
 
@@ -551,6 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const buyerCount = parseInt(buyerCountInput.value) || 1;
 
         const params = {
+            platform: currentPlatform,
             propertyType: currentPropertyType,
             salePrice: salePrice,
             standardPrice: standardPrice,
@@ -605,6 +707,20 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerFee) + '원';
         document.getElementById('lawyerVat').textContent = formatNumber(result.lawyerVat) + '원';
         document.getElementById('otherTotal').textContent = formatNumber(result.otherTotal) + '원';
+
+        // 일반 플랫폼 추가 비용 표시/숨김
+        const isGeneral = result.platform === 'general';
+        document.getElementById('bondServiceFeeRow').style.display = isGeneral ? 'flex' : 'none';
+        document.getElementById('taxReportFeeRow').style.display = isGeneral ? 'flex' : 'none';
+        document.getElementById('submissionFeeRow').style.display = isGeneral ? 'flex' : 'none';
+        document.getElementById('certFeeRow').style.display = isGeneral ? 'flex' : 'none';
+
+        if (isGeneral) {
+            document.getElementById('bondServiceFee').textContent = formatNumber(result.bondServiceFee) + '원';
+            document.getElementById('taxReportFee').textContent = formatNumber(result.taxReportFee) + '원';
+            document.getElementById('submissionFee').textContent = formatNumber(result.submissionFee) + '원';
+            document.getElementById('certFee').textContent = formatNumber(result.certFee) + '원';
+        }
 
         // 총 비용
         document.getElementById('grandTotal').textContent = formatNumber(result.grandTotal) + '원';

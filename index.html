@@ -20,9 +20,25 @@
         </header>
 
         <main>
+            <!-- 플랫폼 선택 -->
+            <section class="input-section">
+                <h2>1. 플랫폼 선택</h2>
+                <div class="property-type-grid">
+                    <button class="platform-btn active" data-platform="general">
+                        <span class="label">일반</span>
+                    </button>
+                    <button class="platform-btn" data-platform="master">
+                        <span class="label">등기마스터</span>
+                    </button>
+                    <button class="platform-btn" data-platform="bubtong">
+                        <span class="label">법무통</span>
+                    </button>
+                </div>
+            </section>
+
             <!-- 부동산 유형 선택 -->
             <section class="input-section">
-                <h2>1. 부동산 유형 선택</h2>
+                <h2>2. 부동산 유형 선택</h2>
                 <div class="property-type-grid">
                     <button class="property-type-btn active" data-type="apartment">
                         <span class="icon">🏢</span>
@@ -41,7 +57,7 @@
 
             <!-- 주택 추가 옵션 (주택/아파트 선택시만 표시) -->
             <section class="input-section housing-options" id="housingOptions">
-                <h2>2. 주택 상세 옵션</h2>
+                <h2>3. 주택 상세 옵션</h2>
                 <div class="option-group">
                     <label>보유 주택 수</label>
                     <div class="radio-group">
@@ -99,7 +115,7 @@
 
             <!-- 토지 추가 옵션 -->
             <section class="input-section land-options hidden" id="landOptions">
-                <h2>2. 토지 상세 옵션</h2>
+                <h2>3. 토지 상세 옵션</h2>
                 <div class="option-group">
                     <label>토지 유형</label>
                     <div class="radio-group">
@@ -117,7 +133,7 @@
 
             <!-- 지역 및 금액 입력 -->
             <section class="input-section">
-                <h2><span id="sectionNumber">3</span>. 지역 및 금액 정보</h2>
+                <h2><span id="sectionNumber">4</span>. 지역 및 금액 정보</h2>
 
                 <div class="option-group">
                     <label>지역 선택</label>
@@ -264,6 +280,23 @@
                         <div class="result-row">
                             <span>부가가치세</span>
                             <span id="lawyerVat">0원</span>
+                        </div>
+                        <!-- 일반 플랫폼 추가 비용 -->
+                        <div class="result-row additional-fee" id="bondServiceFeeRow">
+                            <span>채권 매입매도신청</span>
+                            <span id="bondServiceFee">0원</span>
+                        </div>
+                        <div class="result-row additional-fee" id="taxReportFeeRow">
+                            <span>취득세 신고 납부</span>
+                            <span id="taxReportFee">0원</span>
+                        </div>
+                        <div class="result-row additional-fee" id="submissionFeeRow">
+                            <span>제출대행 및 우편료</span>
+                            <span id="submissionFee">0원</span>
+                        </div>
+                        <div class="result-row additional-fee" id="certFeeRow">
+                            <span>제증명료</span>
+                            <span id="certFee">0원</span>
                         </div>
                     </div>
                 </div>

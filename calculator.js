@@ -476,6 +476,22 @@ function calculateTotal(params) {
     let lawyerFeeResult;
     if (platform === 'general') {
         lawyerFeeResult = calculateLawyerFeeGeneral(params.salePrice);
+
+        // 일반 플랫폼 할인율 적용 (법무사 비용만)
+        const lawyerDiscount = params.lawyerDiscount || 0;
+        if (lawyerDiscount > 0) {
+            const discountRate = lawyerDiscount / 100;
+            const originalFee = lawyerFeeResult.baseFee;
+            const discountedFee = Math.round(originalFee * (1 - discountRate));
+            const discountedVat = Math.round(discountedFee * 0.1);
+            lawyerFeeResult = {
+                baseFee: discountedFee,
+                vat: discountedVat,
+                total: discountedFee + discountedVat,
+                originalFee: originalFee,
+                discountRate: lawyerDiscount
+            };
+        }
     } else {
         lawyerFeeResult = calculateLawyerFeeMaster(params.salePrice);
     }
@@ -533,6 +549,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 플랫폼 선택
     const platformBtns = document.querySelectorAll('.platform-btn');
+    const lawyerDiscountGroup = document.getElementById('lawyerDiscountGroup');
+
     platformBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             platformBtns.forEach(b => b.classList.remove('active'));
@@ -544,6 +562,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const transportFeeInput = document.getElementById('transportFee');
             if (transportFeeInput) {
                 transportFeeInput.value = formatNumber(config.transportFee);
+            }
+
+            // 일반 플랫폼일 때만 할인율 옵션 표시
+            if (lawyerDiscountGroup) {
+                lawyerDiscountGroup.style.display = currentPlatform === 'general' ? 'block' : 'none';
             }
         });
     });
@@ -651,8 +674,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const buyerCountInput = document.getElementById('buyerCount');
         const buyerCount = parseInt(buyerCountInput.value) || 1;
 
+        const lawyerDiscountRadio = document.querySelector('input[name="lawyerDiscount"]:checked');
+        const lawyerDiscount = lawyerDiscountRadio ? parseInt(lawyerDiscountRadio.value) : 0;
+
         const params = {
             platform: currentPlatform,
+            lawyerDiscount: lawyerDiscount,
             propertyType: currentPropertyType,
             salePrice: salePrice,
             standardPrice: standardPrice,

@@ -520,6 +520,9 @@ function calculateTotal(params) {
         lawyerFee: lawyerFeeResult.baseFee,
         lawyerVat: lawyerFeeResult.vat,
         lawyerTotal: lawyerFeeResult.total,
+        lawyerOriginalFee: lawyerFeeResult.originalFee || lawyerFeeResult.baseFee,
+        lawyerDiscountRate: lawyerFeeResult.discountRate || 0,
+        lawyerDiscountAmount: lawyerFeeResult.originalFee ? (lawyerFeeResult.originalFee - lawyerFeeResult.baseFee) : 0,
         additionalFees,
         bondServiceFee: config.bondServiceFee,
         taxReportFee: config.taxReportFee,
@@ -731,7 +734,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('stampTax').textContent = formatNumber(result.stampTax) + '원';
         document.getElementById('registrationFee').textContent = formatNumber(result.registrationFee) + '원';
         document.getElementById('transportFeeResult').textContent = formatNumber(result.transportFee) + '원';
-        document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerFee) + '원';
+        // 할인 적용 시 원래 금액 표시, 아니면 할인된 금액 표시
+        if (result.lawyerDiscountRate > 0) {
+            document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerOriginalFee) + '원';
+            document.getElementById('lawyerDiscountRow').style.display = 'flex';
+            document.getElementById('lawyerDiscountLabel').textContent = '할인 -' + result.lawyerDiscountRate + '%';
+            document.getElementById('lawyerDiscountAmount').textContent = '-' + formatNumber(result.lawyerDiscountAmount) + '원';
+        } else {
+            document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerFee) + '원';
+            document.getElementById('lawyerDiscountRow').style.display = 'none';
+        }
         document.getElementById('lawyerVat').textContent = formatNumber(result.lawyerVat) + '원';
         document.getElementById('otherTotal').textContent = formatNumber(result.otherTotal) + '원';
 

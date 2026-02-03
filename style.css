@@ -678,6 +678,24 @@ header:hover .header-particles span {
     font-weight: 600;
 }
 
+/* 할인 표시 스타일 */
+.result-row.discount-row {
+    background: rgba(220, 53, 69, 0.08);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+.discount-label {
+    color: #dc3545 !important;
+    font-weight: 600;
+}
+
+.discount-amount {
+    color: #dc3545 !important;
+    font-weight: 700;
+}
+
 .result-note {
     font-size: 0.8rem;
     color: var(--text-muted);

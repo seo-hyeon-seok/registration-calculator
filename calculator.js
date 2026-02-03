@@ -291,7 +291,7 @@ function calculateAcquisitionTax(params) {
  * 국민주택채권 매입액 계산
  */
 function calculateBond(params) {
-    const { propertyType, standardPrice, region, bondDiscountRate } = params;
+    const { propertyType, standardPrice, region, bondDiscountRate, buyerCount = 1 } = params;
 
     // 시가표준액이 없으면 채권 계산 건너뜀
     if (!standardPrice || standardPrice === 0) {
@@ -300,7 +300,8 @@ function calculateBond(params) {
             bondRate: 0,
             bondRatePercent: '0.00',
             discountAmount: 0,
-            discountRate: bondDiscountRate
+            discountRate: bondDiscountRate,
+            buyerCount: buyerCount
         };
     }
 
@@ -312,17 +313,23 @@ function calculateBond(params) {
 
     const rates = bondRates[typeKey] || bondRates.commercial;
 
-    // 시가표준액에 해당하는 매입률 찾기
+    // 공동명의: 시가표준액을 매수인 수로 나눠서 각각 계산
+    const pricePerBuyer = standardPrice / buyerCount;
+
+    // 1인당 시가표준액에 해당하는 매입률 찾기
     let bondRate = 0;
     for (const bracket of rates) {
-        if (standardPrice >= bracket.min && standardPrice < bracket.max) {
+        if (pricePerBuyer >= bracket.min && pricePerBuyer < bracket.max) {
             bondRate = bracket.rate;
             break;
         }
     }
 
-    // 채권매입액 계산 (만원 단위 반올림)
-    const bondAmount = roundToTenThousand(standardPrice * bondRate);
+    // 1인당 채권매입액 계산 (만원 단위 반올림)
+    const bondAmountPerBuyer = roundToTenThousand(pricePerBuyer * bondRate);
+
+    // 총 채권매입액 (1인당 × 매수인 수)
+    const bondAmount = bondAmountPerBuyer * buyerCount;
 
     // 할인매도시 실제 부담액
     const discountRate = bondDiscountRate / 100;
@@ -333,7 +340,10 @@ function calculateBond(params) {
         bondRate,
         bondRatePercent: (bondRate * 100).toFixed(2),
         discountAmount: actualCost,
-        discountRate: bondDiscountRate
+        discountRate: bondDiscountRate,
+        buyerCount: buyerCount,
+        pricePerBuyer: pricePerBuyer,
+        bondAmountPerBuyer: bondAmountPerBuyer
     };
 }
 
@@ -537,6 +547,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const transportFeeInput = document.getElementById('transportFee');
         const transportFee = parseInputNumber(transportFeeInput.value) || 50000;
 
+        const buyerCountInput = document.getElementById('buyerCount');
+        const buyerCount = parseInt(buyerCountInput.value) || 1;
+
         const params = {
             propertyType: currentPropertyType,
             salePrice: salePrice,
@@ -548,7 +561,8 @@ document.addEventListener('DOMContentLoaded', function() {
             isUnder85sqm: under85sqmCheckbox ? under85sqmCheckbox.checked : true,
             landType: landTypeRadio ? landTypeRadio.value : 'general',
             bondDiscountRate: bondDiscountRate,
-            transportFee: transportFee
+            transportFee: transportFee,
+            buyerCount: buyerCount
         };
 
         // 계산 실행

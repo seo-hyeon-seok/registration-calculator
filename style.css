@@ -678,6 +678,19 @@ header:hover .header-particles span {
     font-weight: 600;
 }
 
+/* 할인율 선택 한 줄 표시 */
+.discount-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.discount-radio-group .radio-label {
+    flex: 0 0 auto;
+    padding: 10px 16px;
+    min-width: auto;
+}
+
 /* 할인 표시 스타일 */
 .result-row.discount-row {
     background: rgba(220, 53, 69, 0.08);

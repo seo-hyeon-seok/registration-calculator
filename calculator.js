@@ -229,8 +229,8 @@ function calculateAcquisitionTax(params) {
                 taxRate = 0.01;
                 note = '6억원 이하 1주택 기본세율 1% 적용';
             } else if (salePrice <= 900000000) {
-                // 6억~9억: 누진세율 (소수점 넷째자리 절사)
-                taxRate = Math.floor((salePrice * 2 / 300000000 - 3) * 100) / 10000;
+                // 6억~9억: 누진세율 (소수점 넷째자리 반올림)
+                taxRate = Math.round((salePrice * 2 / 300000000 - 3) * 100) / 10000;
                 note = '6억~9억 구간 누진세율 적용';
             } else {
                 taxRate = 0.03;

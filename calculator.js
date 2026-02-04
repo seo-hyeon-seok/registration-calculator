@@ -112,7 +112,7 @@ const PLATFORM_CONFIG = {
     general: {
         name: '일반',
         registrationFee: 18000,      // 증지대
-        transportFee: 70000,          // 교통비
+        transportFee: 30000,          // 교통비
         bondServiceFee: 40000,        // 채권 매입매도신청
         taxReportFee: 30000,          // 취득세 신고 납부
         submissionFee: 20000,         // 제출대행 및 우편료
@@ -121,7 +121,7 @@ const PLATFORM_CONFIG = {
     master: {
         name: '등기마스터',
         registrationFee: 15000,
-        transportFee: 50000,
+        transportFee: 30000,
         bondServiceFee: 0,
         taxReportFee: 0,
         submissionFee: 0,
@@ -130,7 +130,7 @@ const PLATFORM_CONFIG = {
     bubtong: {
         name: '법무통',
         registrationFee: 15000,
-        transportFee: 50000,
+        transportFee: 30000,
         bondServiceFee: 0,
         taxReportFee: 0,
         submissionFee: 0,

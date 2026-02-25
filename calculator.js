@@ -162,6 +162,18 @@ const SEOUL_DISTRICT_TO_REGION = {
     '동대문구': 'seoul_north', '성북구': 'seoul_north', '중랑구': 'seoul_north',
 };
 
+// 등기마스터 지역 코드 → 표시명 매핑
+const MASTER_REGION_LABEL = {
+    'seoul_south': '서울남부',
+    'seoul_west': '서울서부',
+    'seoul_central': '서울중앙',
+    'seoul_central_mid': '서울중앙중부',
+    'seoul_east': '서울동부',
+    'seoul_north': '서울북부',
+    'gyeonggi_near': '경기 근거리',
+    'gyeonggi_mid': '경기 중거리',
+};
+
 // 경기도 시 → 지역 코드 매핑 (주소검색 자동감지용)
 const GYEONGGI_CITY_TO_REGION = {
     '광명시': 'gyeonggi_near', '안양시': 'gyeonggi_near', '시흥시': 'gyeonggi_near', '부천시': 'gyeonggi_near',
@@ -561,6 +573,7 @@ function calculateTotal(params) {
 
     return {
         platform,
+        masterRegion: params.masterRegion || '',
         acquisition: acquisitionResult,
         bond: bondResult,
         stampTax,
@@ -870,6 +883,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (transportFeeRow) {
             transportFeeRow.style.display = (result.platform === 'master') ? 'none' : 'flex';
         }
+        // 보수료 라벨 (등기마스터는 지역명 표시)
+        const lawyerFeeLabel = document.getElementById('lawyerFeeLabel');
+        if (lawyerFeeLabel) {
+            if (result.platform === 'master' && result.masterRegion) {
+                const regionLabel = MASTER_REGION_LABEL[result.masterRegion] || '';
+                lawyerFeeLabel.textContent = regionLabel ? `보수료 (${regionLabel})` : '보수료';
+            } else {
+                lawyerFeeLabel.textContent = '보수료';
+            }
+        }
+
         // 할인 적용 시 원래 금액 표시, 아니면 할인된 금액 표시
         if (result.lawyerDiscountRate > 0) {
             document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerOriginalFee) + '원';

@@ -706,13 +706,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const addr = this.value;
             let detectedRegion = null;
 
-            // 서울 구 감지
-            if (addr.includes('서울')) {
-                for (const [district, region] of Object.entries(SEOUL_DISTRICT_TO_REGION)) {
-                    if (addr.includes(district)) {
-                        detectedRegion = region;
-                        break;
-                    }
+            // 서울 구 감지 (구 이름만 있어도 매칭)
+            for (const [district, region] of Object.entries(SEOUL_DISTRICT_TO_REGION)) {
+                if (addr.includes(district)) {
+                    detectedRegion = region;
+                    break;
                 }
             }
 

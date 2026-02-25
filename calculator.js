@@ -696,6 +696,47 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // 주소 직접 입력 시 등기마스터 지역 자동 감지
+    if (addressInput) {
+        addressInput.addEventListener('input', function() {
+            if (currentPlatform !== 'master') return;
+            const masterRegionSelect = document.getElementById('masterRegion');
+            if (!masterRegionSelect) return;
+
+            const addr = this.value;
+            let detectedRegion = null;
+
+            // 서울 구 감지
+            if (addr.includes('서울')) {
+                for (const [district, region] of Object.entries(SEOUL_DISTRICT_TO_REGION)) {
+                    if (addr.includes(district)) {
+                        detectedRegion = region;
+                        break;
+                    }
+                }
+            }
+
+            // 경기도 시 감지
+            if (!detectedRegion) {
+                for (const [city, region] of Object.entries(GYEONGGI_CITY_TO_REGION)) {
+                    if (addr.includes(city)) {
+                        detectedRegion = region;
+                        break;
+                    }
+                }
+            }
+
+            // 인천 감지
+            if (!detectedRegion && addr.includes('인천')) {
+                detectedRegion = 'gyeonggi_mid';
+            }
+
+            if (detectedRegion) {
+                masterRegionSelect.value = detectedRegion;
+            }
+        });
+    }
+
     // 부동산 유형 선택
     propertyTypeBtns.forEach(btn => {
         btn.addEventListener('click', function() {

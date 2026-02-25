@@ -64,6 +64,30 @@
                         </label>
                     </div>
                 </div>
+                <!-- 등기마스터 지역 구분 -->
+                <div class="option-group" id="masterRegionGroup" style="display:none; margin-top: 16px;">
+                    <label>지역 구분 (법무사 수수료 기준)</label>
+                    <select id="masterRegion" class="master-region-select">
+                        <option value="">-- 지역을 선택하세요 --</option>
+                        <optgroup label="서울 250,000원">
+                            <option value="seoul_south">서울남부 — 강서·구로·금천·양천·영등포구</option>
+                            <option value="seoul_west">서울서부 — 마포·서대문·용산·은평구</option>
+                        </optgroup>
+                        <optgroup label="서울 280,000원">
+                            <option value="seoul_central">서울중앙 — 강남·관악·동작·서초구</option>
+                            <option value="seoul_central_mid">서울중앙중부 — 종로·중구</option>
+                            <option value="seoul_east">서울동부 — 강동·광진·성동·송파구</option>
+                            <option value="seoul_north">서울북부 — 강북·노원·도봉·동대문·성북·중랑구</option>
+                        </optgroup>
+                        <optgroup label="경기 250,000원">
+                            <option value="gyeonggi_near">경기 근거리 — 광명·안양·시흥·부천</option>
+                        </optgroup>
+                        <optgroup label="경기·인천 300,000원">
+                            <option value="gyeonggi_mid">경기 중거리 — 용인·수원·분당·하남·고양·김포·성남·안산·인천</option>
+                        </optgroup>
+                    </select>
+                    <p class="helper-text">* 주소 검색 시 자동으로 선택됩니다.</p>
+                </div>
             </section>
 
             <!-- 부동산 유형 선택 -->
@@ -299,7 +323,7 @@
                             <span>증지대</span>
                             <span id="registrationFee">0원</span>
                         </div>
-                        <div class="result-row">
+                        <div class="result-row" id="transportFeeRow">
                             <span>일당 및 교통비</span>
                             <span id="transportFeeResult">0원</span>
                         </div>

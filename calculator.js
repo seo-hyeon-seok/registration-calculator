@@ -121,7 +121,7 @@ const PLATFORM_CONFIG = {
     master: {
         name: '등기마스터',
         registrationFee: 15000,
-        transportFee: 30000,
+        transportFee: 0,
         bondServiceFee: 0,
         taxReportFee: 0,
         submissionFee: 0,
@@ -136,6 +136,37 @@ const PLATFORM_CONFIG = {
         submissionFee: 0,
         certFee: 0
     }
+};
+
+// 등기마스터 지역별 법무사 수수료
+const MASTER_REGION_FEE = {
+    'seoul_south': 250000,       // 서울남부 (강서,구로,금천,양천,영등포)
+    'seoul_west': 250000,        // 서울서부 (마포,서대문,용산,은평)
+    'seoul_central': 280000,     // 서울중앙 (강남,관악,동작,서초)
+    'seoul_central_mid': 280000, // 서울중앙중부 (종로,중)
+    'seoul_east': 280000,        // 서울동부 (강동,광진,성동,송파)
+    'seoul_north': 280000,       // 서울북부 (강북,노원,도봉,동대문,성북,중랑)
+    'gyeonggi_near': 250000,     // 경기 근거리 (광명,안양,시흥,부천)
+    'gyeonggi_mid': 300000,      // 경기 중거리 (용인,수원,분당,하남,고양,김포,성남,안산,인천)
+};
+
+// 서울 구 → 지역 코드 매핑 (주소검색 자동감지용)
+const SEOUL_DISTRICT_TO_REGION = {
+    '강서구': 'seoul_south', '구로구': 'seoul_south', '금천구': 'seoul_south',
+    '양천구': 'seoul_south', '영등포구': 'seoul_south',
+    '마포구': 'seoul_west', '서대문구': 'seoul_west', '용산구': 'seoul_west', '은평구': 'seoul_west',
+    '강남구': 'seoul_central', '관악구': 'seoul_central', '동작구': 'seoul_central', '서초구': 'seoul_central',
+    '종로구': 'seoul_central_mid', '중구': 'seoul_central_mid',
+    '강동구': 'seoul_east', '광진구': 'seoul_east', '성동구': 'seoul_east', '송파구': 'seoul_east',
+    '강북구': 'seoul_north', '노원구': 'seoul_north', '도봉구': 'seoul_north',
+    '동대문구': 'seoul_north', '성북구': 'seoul_north', '중랑구': 'seoul_north',
+};
+
+// 경기도 시 → 지역 코드 매핑 (주소검색 자동감지용)
+const GYEONGGI_CITY_TO_REGION = {
+    '광명시': 'gyeonggi_near', '안양시': 'gyeonggi_near', '시흥시': 'gyeonggi_near', '부천시': 'gyeonggi_near',
+    '용인시': 'gyeonggi_mid', '수원시': 'gyeonggi_mid', '하남시': 'gyeonggi_mid',
+    '고양시': 'gyeonggi_mid', '김포시': 'gyeonggi_mid', '성남시': 'gyeonggi_mid', '안산시': 'gyeonggi_mid',
 };
 
 // ===== 유틸리티 함수 =====
@@ -436,9 +467,9 @@ function calculateLawyerFeeGeneral(salePrice) {
 }
 
 /**
- * 법무사 수수료 계산 (등기마스터/법무통용 - 구간별 고정)
+ * 법무사 수수료 계산 (법무통용 - 매매대금 기준 구간별 고정)
  */
-function calculateLawyerFeeMaster(salePrice) {
+function calculateLawyerFeeBubtong(salePrice) {
     let fee = 0;
 
     if (salePrice <= 600000000) {
@@ -451,6 +482,21 @@ function calculateLawyerFeeMaster(salePrice) {
         fee = 400000;
     }
 
+    const baseFee = fee;
+    const vat = Math.round(fee * 0.1);
+
+    return {
+        baseFee,      // 보수료 (부가세 제외)
+        vat,          // 부가가치세
+        total: baseFee + vat  // 합계
+    };
+}
+
+/**
+ * 법무사 수수료 계산 (등기마스터용 - 지역별 고정)
+ */
+function calculateLawyerFeeMaster(masterRegion) {
+    const fee = MASTER_REGION_FEE[masterRegion] || 250000;
     const baseFee = fee;
     const vat = Math.round(fee * 0.1);
 
@@ -492,8 +538,11 @@ function calculateTotal(params) {
                 discountRate: lawyerDiscount
             };
         }
+    } else if (platform === 'master') {
+        lawyerFeeResult = calculateLawyerFeeMaster(params.masterRegion);
     } else {
-        lawyerFeeResult = calculateLawyerFeeMaster(params.salePrice);
+        // 법무통 - 매매대금 기준
+        lawyerFeeResult = calculateLawyerFeeBubtong(params.salePrice);
     }
 
     // 플랫폼별 고정 비용
@@ -564,12 +613,24 @@ document.addEventListener('DOMContentLoaded', function() {
             const config = PLATFORM_CONFIG[currentPlatform];
             const transportFeeInput = document.getElementById('transportFee');
             if (transportFeeInput) {
-                transportFeeInput.value = formatNumber(config.transportFee);
+                if (currentPlatform === 'master') {
+                    transportFeeInput.value = '0';
+                    transportFeeInput.disabled = true;
+                } else {
+                    transportFeeInput.value = formatNumber(config.transportFee);
+                    transportFeeInput.disabled = false;
+                }
             }
 
             // 일반 플랫폼일 때만 할인율 옵션 표시
             if (lawyerDiscountGroup) {
                 lawyerDiscountGroup.style.display = currentPlatform === 'general' ? 'block' : 'none';
+            }
+
+            // 등기마스터일 때만 지역 구분 표시
+            const masterRegionGroup = document.getElementById('masterRegionGroup');
+            if (masterRegionGroup) {
+                masterRegionGroup.style.display = currentPlatform === 'master' ? 'block' : 'none';
             }
         });
     });
@@ -611,6 +672,25 @@ document.addEventListener('DOMContentLoaded', function() {
                             radio.checked = true;
                         }
                     });
+
+                    // 등기마스터 지역 자동 감지
+                    if (currentPlatform === 'master') {
+                        const masterRegionSelect = document.getElementById('masterRegion');
+                        if (masterRegionSelect) {
+                            let detectedRegion = null;
+                            if (data.sido === '서울특별시') {
+                                detectedRegion = SEOUL_DISTRICT_TO_REGION[data.sigungu] || null;
+                            } else if (data.sido === '경기도') {
+                                const cityName = data.sigungu.split(' ')[0];
+                                detectedRegion = GYEONGGI_CITY_TO_REGION[cityName] || null;
+                            } else if (data.sido === '인천광역시') {
+                                detectedRegion = 'gyeonggi_mid';
+                            }
+                            if (detectedRegion) {
+                                masterRegionSelect.value = detectedRegion;
+                            }
+                        }
+                    }
                 }
             }).open();
         });
@@ -672,7 +752,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const under85sqmCheckbox = document.getElementById('under85sqm');
 
         const transportFeeInput = document.getElementById('transportFee');
-        const transportFee = parseInputNumber(transportFeeInput.value) || 50000;
+        const defaultTransportFee = PLATFORM_CONFIG[currentPlatform].transportFee;
+        const transportFee = currentPlatform === 'master' ? 0 : (parseInputNumber(transportFeeInput.value) || defaultTransportFee);
 
         const buyerCountInput = document.getElementById('buyerCount');
         const buyerCount = parseInt(buyerCountInput.value) || 1;
@@ -680,9 +761,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const lawyerDiscountRadio = document.querySelector('input[name="lawyerDiscount"]:checked');
         const lawyerDiscount = lawyerDiscountRadio ? parseInt(lawyerDiscountRadio.value) : 0;
 
+        const masterRegionSelect = document.getElementById('masterRegion');
+        const masterRegion = masterRegionSelect ? masterRegionSelect.value : '';
+
+        // 등기마스터 지역 미선택 시 경고
+        if (currentPlatform === 'master' && !masterRegion) {
+            alert('등기마스터 지역을 선택해주세요.');
+            if (masterRegionSelect) masterRegionSelect.focus();
+            return;
+        }
+
         const params = {
             platform: currentPlatform,
             lawyerDiscount: lawyerDiscount,
+            masterRegion: masterRegion,
             propertyType: currentPropertyType,
             salePrice: salePrice,
             standardPrice: standardPrice,
@@ -734,6 +826,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('stampTax').textContent = formatNumber(result.stampTax) + '원';
         document.getElementById('registrationFee').textContent = formatNumber(result.registrationFee) + '원';
         document.getElementById('transportFeeResult').textContent = formatNumber(result.transportFee) + '원';
+        // 등기마스터는 교통비 행 숨김
+        const transportFeeRow = document.getElementById('transportFeeRow');
+        if (transportFeeRow) {
+            transportFeeRow.style.display = (result.platform === 'master') ? 'none' : 'flex';
+        }
         // 할인 적용 시 원래 금액 표시, 아니면 할인된 금액 표시
         if (result.lawyerDiscountRate > 0) {
             document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerOriginalFee) + '원';

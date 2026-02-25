@@ -709,22 +709,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 주소 직접 입력 시 등기마스터 지역 자동 감지
+    // 주소 직접 입력 시 지역 자동 감지
     if (addressInput) {
         addressInput.addEventListener('input', function() {
-            if (currentPlatform !== 'master') return;
-            const masterRegionSelect = document.getElementById('masterRegion');
-            if (!masterRegionSelect) return;
-
             const addr = this.value;
 
-            // 특별·광역시 여부 자동 감지
+            // 서울 구 이름 포함 여부 먼저 확인 (서울 없이 구 이름만 입력해도 서울로 판단)
+            const isSeoulDistrict = Object.keys(SEOUL_DISTRICT_TO_REGION).some(d => addr.includes(d));
+
+            // 특별·광역시 여부 자동 감지 (모든 플랫폼 공통)
             const metroNames = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종'];
-            const isMetro = metroNames.some(m => addr.includes(m));
+            const isMetro = isSeoulDistrict || metroNames.some(m => addr.includes(m));
             regionRadios.forEach(radio => {
                 if (isMetro && radio.value === 'metro') radio.checked = true;
                 else if (!isMetro && radio.value === 'other') radio.checked = true;
             });
+
+            // 등기마스터 지역 자동 감지 (마스터 플랫폼일 때만)
+            if (currentPlatform !== 'master') return;
+            const masterRegionSelect = document.getElementById('masterRegion');
+            if (!masterRegionSelect) return;
 
             let detectedRegion = null;
 

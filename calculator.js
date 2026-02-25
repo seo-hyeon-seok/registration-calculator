@@ -717,6 +717,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!masterRegionSelect) return;
 
             const addr = this.value;
+
+            // 특별·광역시 여부 자동 감지
+            const metroNames = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종'];
+            const isMetro = metroNames.some(m => addr.includes(m));
+            regionRadios.forEach(radio => {
+                if (isMetro && radio.value === 'metro') radio.checked = true;
+                else if (!isMetro && radio.value === 'other') radio.checked = true;
+            });
+
             let detectedRegion = null;
 
             // 서울 구 감지 (구 이름만 있어도 매칭)

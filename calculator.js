@@ -696,7 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (transportFeeInput) {
                 if (currentPlatform === 'master') {
                     transportFeeInput.value = '0';
-                    transportFeeInput.disabled = true;
+                    transportFeeInput.disabled = false;
                 } else {
                     transportFeeInput.value = formatNumber(config.transportFee);
                     transportFeeInput.disabled = false;
@@ -886,7 +886,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const transportFeeInput = document.getElementById('transportFee');
         const defaultTransportFee = PLATFORM_CONFIG[currentPlatform].transportFee;
-        const transportFee = currentPlatform === 'master' ? 0 : (parseInputNumber(transportFeeInput.value) || defaultTransportFee);
+        const transportFee = parseInputNumber(transportFeeInput.value) || (currentPlatform === 'master' ? 0 : defaultTransportFee);
 
         const buyerCountInput = document.getElementById('buyerCount');
         const buyerCount = parseInt(buyerCountInput.value) || 1;
@@ -959,10 +959,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('stampTax').textContent = formatNumber(result.stampTax) + '원';
         document.getElementById('registrationFee').textContent = formatNumber(result.registrationFee) + '원';
         document.getElementById('transportFeeResult').textContent = formatNumber(result.transportFee) + '원';
-        // 등기마스터는 교통비 행 숨김
         const transportFeeRow = document.getElementById('transportFeeRow');
         if (transportFeeRow) {
-            transportFeeRow.style.display = (result.platform === 'master') ? 'none' : 'flex';
+            transportFeeRow.style.display = 'flex';
         }
         // 보수료 라벨 (등기마스터는 지역명 표시)
         const lawyerFeeLabel = document.getElementById('lawyerFeeLabel');

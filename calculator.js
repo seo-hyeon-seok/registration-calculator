@@ -130,7 +130,7 @@ const PLATFORM_CONFIG = {
     bubtong: {
         name: '법무통',
         registrationFee: 15000,
-        transportFee: 30000,
+        transportFee: 0,
         bondServiceFee: 0,
         taxReportFee: 0,
         submissionFee: 0,
@@ -479,28 +479,66 @@ function calculateLawyerFeeGeneral(salePrice) {
 }
 
 /**
- * 법무사 수수료 계산 (법무통용 - 매매대금 기준 구간별 고정)
+ * 법무통 보수료 구간 테이블 (부가세 포함 금액)
+ * 실제 케이스 기반 — 데이터 추가 시 항목 추가/수정
+ * [매매대금(원), 보수료(원)]
+ */
+const BUBTONG_FEE_TABLE = [
+    [270000000,  210000],
+    [320000000,  250000],
+    [560000000,  250000],
+    [665000000,  260000],
+    [685000000,  270000],
+    [730000000,  280000],
+    [900000000,  330000],
+    [1020000000, 360000],
+    [1047000000, 370000],
+    [1100000000, 380000],
+    [1150000000, 385000],
+    [1250000000, 405000],
+    [1300000000, 415000],
+    [1770000000, 510000],
+    [2400000000, 550000],
+];
+
+/**
+ * 법무사 수수료 계산 (법무통용 - 케이스 기반 보간 테이블)
  */
 function calculateLawyerFeeBubtong(salePrice) {
-    let fee = 0;
+    const table = BUBTONG_FEE_TABLE;
+    let fee;
 
-    if (salePrice <= 600000000) {
-        fee = 250000;
-    } else if (salePrice <= 1000000000) {
-        fee = 300000;
-    } else if (salePrice <= 2000000000) {
-        fee = 350000;
+    if (salePrice <= table[0][0]) {
+        // 최솟값 미만: 최소 보수료 고정
+        fee = table[0][1];
+    } else if (salePrice >= table[table.length - 1][0]) {
+        // 최댓값 초과: 마지막 구간 비율로 연장
+        const [p1, f1] = table[table.length - 2];
+        const [p2, f2] = table[table.length - 1];
+        const rate = (f2 - f1) / (p2 - p1);
+        fee = Math.round(f2 + rate * (salePrice - p2));
     } else {
-        fee = 400000;
+        // 구간 내: 선형 보간
+        for (let i = 0; i < table.length - 1; i++) {
+            const [p1, f1] = table[i];
+            const [p2, f2] = table[i + 1];
+            if (salePrice <= p2) {
+                const ratio = (salePrice - p1) / (p2 - p1);
+                fee = Math.round(f1 + ratio * (f2 - f1));
+                break;
+            }
+        }
     }
 
-    const baseFee = fee;
-    const vat = Math.round(fee * 0.1);
+    // fee는 부가세 포함 금액 → 역산으로 분리
+    const total = fee;
+    const baseFee = Math.round(fee / 1.1);
+    const vat = total - baseFee;
 
     return {
         baseFee,      // 보수료 (부가세 제외)
         vat,          // 부가가치세
-        total: baseFee + vat  // 합계
+        total         // 합계 (부가세 포함)
     };
 }
 

@@ -138,16 +138,30 @@ const PLATFORM_CONFIG = {
     }
 };
 
-// 등기마스터 지역별 법무사 수수료
-const MASTER_REGION_FEE = {
-    'seoul_south': 250000,       // 서울남부 (강서,구로,금천,양천,영등포)
-    'seoul_west': 250000,        // 서울서부 (마포,서대문,용산,은평)
-    'seoul_central': 280000,     // 서울중앙 (강남,관악,동작,서초)
-    'seoul_central_mid': 280000, // 서울중앙중부 (종로,중)
-    'seoul_east': 280000,        // 서울동부 (강동,광진,성동,송파)
-    'seoul_north': 280000,       // 서울북부 (강북,노원,도봉,동대문,성북,중랑)
-    'gyeonggi_near': 250000,     // 경기 근거리 (광명,안양,시흥,부천)
-    'gyeonggi_mid': 300000,      // 경기 중거리 (용인,수원,분당,하남,고양,김포,성남,안산,인천)
+// 등기마스터 매매가 구간별 기본 보수료 (부가세 포함)
+// 5천원 단위로 조정 가능
+const MASTER_FEE_TIERS = [
+    { max:  300000000, fee: 210000 },  // ~3억
+    { max:  500000000, fee: 250000 },  // ~5억
+    { max:  700000000, fee: 280000 },  // ~7억
+    { max:  900000000, fee: 330000 },  // ~9억
+    { max: 1100000000, fee: 380000 },  // ~11억
+    { max: 1300000000, fee: 420000 },  // ~13억
+    { max: 1800000000, fee: 510000 },  // ~18억
+    { max: 2400000000, fee: 550000 },  // ~24억
+    { max: 3000000000, fee: 610000 },  // ~30억
+];
+
+// 등기마스터 지역별 가산금 (부가세 포함, 철산동 기준 거리)
+const MASTER_REGION_SURCHARGE = {
+    'gyeonggi_near':    0,     // 근거리: 광명,안양,시흥,부천
+    'seoul_south':  30000,     // 중거리: 서울 전체
+    'seoul_west':   30000,
+    'seoul_central': 30000,
+    'seoul_central_mid': 30000,
+    'seoul_east':   30000,
+    'seoul_north':  30000,
+    'gyeonggi_mid': 50000,     // 원거리: 수원,분당,하남,고양,김포,성남,안산,인천,용인
 };
 
 // 서울 구 → 지역 코드 매핑 (주소검색 자동감지용)
@@ -543,17 +557,33 @@ function calculateLawyerFeeBubtong(salePrice) {
 }
 
 /**
- * 법무사 수수료 계산 (등기마스터용 - 지역별 고정)
+ * 법무사 수수료 계산 (등기마스터용 - 매매가 구간 + 지역 가산금)
  */
-function calculateLawyerFeeMaster(masterRegion) {
-    const fee = MASTER_REGION_FEE[masterRegion] || 250000;
-    const baseFee = fee;
-    const vat = Math.round(fee * 0.1);
+function calculateLawyerFeeMaster(masterRegion, salePrice) {
+    // 매매가 구간별 기본 보수료
+    const tiers = MASTER_FEE_TIERS;
+    let baseTierFee = tiers[0].fee; // 2억 미만: 최솟값 고정
+    for (const tier of tiers) {
+        if (salePrice <= tier.max) {
+            baseTierFee = tier.fee;
+            break;
+        }
+        baseTierFee = tiers[tiers.length - 1].fee; // 30억 초과: 최댓값 고정
+    }
+
+    // 지역 가산금
+    const surcharge = MASTER_REGION_SURCHARGE[masterRegion] ?? 0;
+    const fee = baseTierFee + surcharge;
+
+    // fee는 부가세 포함 금액 → 역산으로 분리
+    const total = fee;
+    const baseFee = Math.round(fee / 1.1);
+    const vat = total - baseFee;
 
     return {
         baseFee,      // 보수료 (부가세 제외)
         vat,          // 부가가치세
-        total: baseFee + vat  // 합계
+        total         // 합계 (부가세 포함)
     };
 }
 
@@ -589,7 +619,7 @@ function calculateTotal(params) {
             };
         }
     } else if (platform === 'master') {
-        lawyerFeeResult = calculateLawyerFeeMaster(params.masterRegion);
+        lawyerFeeResult = calculateLawyerFeeMaster(params.masterRegion, params.salePrice);
     } else {
         // 법무통 - 매매대금 기준
         lawyerFeeResult = calculateLawyerFeeBubtong(params.salePrice);

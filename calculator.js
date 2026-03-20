@@ -905,7 +905,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let taxNoteText = result.acquisition.note;
         const taxDiscountRadio = document.querySelector('input[name="taxDiscount"]:checked');
         if (taxDiscountRadio && taxDiscountRadio.value !== 'none' && result.salePrice > 1200000000) {
-            taxNoteText += (taxNoteText ? ' ' : '') + '※ 매매대금 12억 초과로 감면이 적용되지 않았습니다.';
+            const discountLabel = taxDiscountRadio.value === 'firstTime' ? '생애최초감면' : '신생아감면';
+            taxNoteText += (taxNoteText ? ' ' : '') + `※ 매매대금 12억 초과로 ${discountLabel}이 적용되지 않았습니다.`;
         }
         taxNoteEl.textContent = taxNoteText;
 

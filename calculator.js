@@ -651,6 +651,7 @@ function calculateTotal(params) {
 
     return {
         platform,
+        salePrice: params.salePrice,
         acquisition: acquisitionResult,
         bond: bondResult,
         stampTax,
@@ -900,7 +901,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('educationTax').textContent = formatNumber(result.acquisition.educationTax) + '원';
         document.getElementById('ruralTax').textContent = formatNumber(result.acquisition.ruralTax) + '원';
         document.getElementById('acquisitionTaxTotal').textContent = formatNumber(result.acquisition.total) + '원';
-        document.getElementById('taxNote').textContent = result.acquisition.note;
+        const taxNoteEl = document.getElementById('taxNote');
+        let taxNoteText = result.acquisition.note;
+        const taxDiscountRadio = document.querySelector('input[name="taxDiscount"]:checked');
+        if (taxDiscountRadio && taxDiscountRadio.value !== 'none' && result.salePrice > 1200000000) {
+            taxNoteText += (taxNoteText ? ' ' : '') + '※ 매매대금 12억 초과로 감면이 적용되지 않았습니다.';
+        }
+        taxNoteEl.textContent = taxNoteText;
 
         // 국민주택채권
         document.getElementById('bondAmount').textContent = formatNumber(result.bond.bondAmount) + '원';

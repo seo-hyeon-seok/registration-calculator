@@ -366,6 +366,7 @@
                 <div class="copy-buttons">
                     <button class="copy-btn" id="copyAllBtn">전체 결과 복사</button>
                     <button class="copy-btn secondary" id="copyForMasterBtn">등기마스터용 복사</button>
+                    <button class="copy-btn receipt-btn" id="printReceiptBtn">영수증 출력 (PDF)</button>
                 </div>
 
                 <div class="disclaimer">
@@ -385,6 +386,104 @@
         </footer>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="calculator.js"></script>
+
+    <!-- 영수증 출력 전용 레이아웃 -->
+    <div id="receipt" style="display:none; position:fixed; left:-9999px; top:0; width:210mm; background:#fff; font-family:'Pretendard',-apple-system,sans-serif; color:#2c2416;">
+        <div style="padding:12mm 14mm 10mm;">
+
+            <!-- 헤더 -->
+            <div style="text-align:center; border-bottom:2px solid #3d3229; padding-bottom:8mm; margin-bottom:7mm;">
+                <div style="font-size:22px; font-weight:700; letter-spacing:2px; color:#3d3229;">부동산 등기비용 견적서</div>
+                <div style="font-size:12px; color:#8b7355; margin-top:3px;" id="rct-date"></div>
+            </div>
+
+            <!-- 기본 정보 -->
+            <table style="width:100%; border-collapse:collapse; margin-bottom:6mm; font-size:12px;">
+                <tr>
+                    <td style="width:22%; padding:4px 6px; background:#f5f0e8; color:#6b5d4d; font-weight:600;">플랫폼</td>
+                    <td style="padding:4px 8px;" id="rct-platform"></td>
+                    <td style="width:22%; padding:4px 6px; background:#f5f0e8; color:#6b5d4d; font-weight:600;">매매대금</td>
+                    <td style="padding:4px 8px; font-weight:600;" id="rct-salePrice"></td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 6px; background:#f5f0e8; color:#6b5d4d; font-weight:600;">주소</td>
+                    <td colspan="3" style="padding:4px 8px;" id="rct-address"></td>
+                </tr>
+            </table>
+
+            <!-- 취득세 -->
+            <div style="margin-bottom:5mm;">
+                <div style="background:#3d3229; color:#fff; padding:4px 8px; font-size:12px; font-weight:600; border-radius:4px 4px 0 0;">취득세 관련</div>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; border:1px solid #e0d6c8; border-top:none;">
+                    <tr>
+                        <td style="padding:5px 8px; border-bottom:1px solid #e0d6c8; color:#6b5d4d;">취득세</td>
+                        <td style="padding:5px 8px; border-bottom:1px solid #e0d6c8; text-align:right;" id="rct-acqTax"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding:5px 8px; border-bottom:1px solid #e0d6c8; color:#6b5d4d;">지방교육세</td>
+                        <td style="padding:5px 8px; border-bottom:1px solid #e0d6c8; text-align:right;" id="rct-eduTax"></td>
+                    </tr>
+                    <tr id="rct-ruralTaxRow">
+                        <td style="padding:5px 8px; border-bottom:1px solid #e0d6c8; color:#6b5d4d;">농어촌특별세</td>
+                        <td style="padding:5px 8px; border-bottom:1px solid #e0d6c8; text-align:right;" id="rct-ruralTax"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding:5px 8px; background:#faf7f2; font-weight:600;">소계</td>
+                        <td style="padding:5px 8px; background:#faf7f2; text-align:right; font-weight:600;" id="rct-acqTotal"></td>
+                    </tr>
+                </table>
+                <div style="font-size:11px; color:#8b7355; padding:3px 4px;" id="rct-taxNote"></div>
+            </div>
+
+            <!-- 국민주택채권 -->
+            <div style="margin-bottom:5mm;">
+                <div style="background:#3d3229; color:#fff; padding:4px 8px; font-size:12px; font-weight:600; border-radius:4px 4px 0 0;">국민주택채권</div>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; border:1px solid #e0d6c8; border-top:none;">
+                    <tr>
+                        <td style="padding:5px 8px; border-bottom:1px solid #e0d6c8; color:#6b5d4d;">채권매입액</td>
+                        <td style="padding:5px 8px; border-bottom:1px solid #e0d6c8; text-align:right;" id="rct-bondAmount"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding:5px 8px; background:#faf7f2; font-weight:600;">실부담액 (할인매도)</td>
+                        <td style="padding:5px 8px; background:#faf7f2; text-align:right; font-weight:600;" id="rct-bondDiscount"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 기타 비용 -->
+            <div style="margin-bottom:5mm;">
+                <div style="background:#3d3229; color:#fff; padding:4px 8px; font-size:12px; font-weight:600; border-radius:4px 4px 0 0;">기타 비용</div>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; border:1px solid #e0d6c8; border-top:none;" id="rct-otherTable">
+                </table>
+            </div>
+
+            <!-- 총계 -->
+            <table style="width:100%; border-collapse:collapse; font-size:13px; background:#3d3229; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="padding:8px 10px; color:#f5f0e8; font-weight:600;">총 등기비용</td>
+                    <td style="padding:8px 10px; color:#f5c842; font-size:16px; font-weight:700; text-align:right;" id="rct-grandTotal"></td>
+                </tr>
+            </table>
+
+            <!-- 소계 요약 -->
+            <table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:3mm; color:#6b5d4d;">
+                <tr>
+                    <td style="padding:2px 4px;">취득세 관련</td>
+                    <td style="text-align:right; padding:2px 4px;" id="rct-sumTax"></td>
+                    <td style="padding:2px 4px; padding-left:8px;">채권 할인부담금</td>
+                    <td style="text-align:right; padding:2px 4px;" id="rct-sumBond"></td>
+                    <td style="padding:2px 4px; padding-left:8px;">기타 비용</td>
+                    <td style="text-align:right; padding:2px 4px;" id="rct-sumOther"></td>
+                </tr>
+            </table>
+
+            <!-- 주의사항 -->
+            <div style="margin-top:6mm; padding:4px 8px; background:#f5f0e8; border-left:3px solid #8b7355; font-size:10px; color:#8b7355; line-height:1.6;">
+                ※ 본 견적서는 예상 금액이며 실제 비용과 차이가 있을 수 있습니다. 정확한 금액은 관할 관청 또는 법무사에게 문의하세요.
+            </div>
+        </div>
+    </div>
 </body>
 </html>

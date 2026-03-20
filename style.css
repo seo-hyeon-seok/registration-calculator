@@ -839,6 +839,14 @@ input:disabled {
     background: linear-gradient(135deg, #4a9a4a 0%, #3a8a3a 100%);
 }
 
+.copy-btn.receipt-btn {
+    background: linear-gradient(135deg, #3d3229 0%, #5a4a3a 100%);
+}
+
+.copy-btn.receipt-btn:hover {
+    box-shadow: 0 4px 15px rgba(61, 50, 41, 0.35);
+}
+
 /* Disclaimer */
 .disclaimer {
     background: rgba(251, 191, 36, 0.05);

@@ -1033,6 +1033,83 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // 영수증 출력 (PDF)
+    const printReceiptBtn = document.getElementById('printReceiptBtn');
+    if (printReceiptBtn) {
+        printReceiptBtn.addEventListener('click', function() {
+            if (!lastResult) return;
+
+            const r = lastResult;
+            const platformNames = { general: '일반', master: '등기마스터', bubtong: '법무통' };
+            const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+            const address = document.getElementById('address').value || '-';
+
+            // 기본 정보
+            document.getElementById('rct-date').textContent = today;
+            document.getElementById('rct-platform').textContent = platformNames[r.platform] || r.platform;
+            document.getElementById('rct-salePrice').textContent = formatNumber(r.salePrice) + '원';
+            document.getElementById('rct-address').textContent = address;
+
+            // 취득세
+            document.getElementById('rct-acqTax').textContent = formatNumber(r.acquisition.acquisitionTax) + '원';
+            document.getElementById('rct-eduTax').textContent = formatNumber(r.acquisition.educationTax) + '원';
+            document.getElementById('rct-ruralTax').textContent = formatNumber(r.acquisition.ruralTax) + '원';
+            document.getElementById('rct-ruralTaxRow').style.display = r.acquisition.ruralTax > 0 ? '' : 'none';
+            document.getElementById('rct-acqTotal').textContent = formatNumber(r.acquisition.total) + '원';
+            document.getElementById('rct-taxNote').textContent = r.acquisition.note || '';
+
+            // 채권
+            document.getElementById('rct-bondAmount').textContent = formatNumber(r.bond.bondAmount) + '원';
+            document.getElementById('rct-bondDiscount').textContent = formatNumber(r.bond.discountAmount) + '원';
+
+            // 기타 비용 테이블 동적 생성
+            const otherRows = [
+                { label: '인지대', value: r.stampTax },
+                { label: '증지대', value: r.registrationFee },
+                { label: '일당 및 교통비', value: r.transportFee },
+                { label: '보수료', value: r.lawyerFee },
+                { label: '부가가치세', value: r.lawyerVat },
+                { label: '채권 매입매도신청', value: r.bondServiceFee },
+                { label: '취득세 신고 납부', value: r.taxReportFee },
+                { label: '제출대행 및 우편료', value: r.submissionFee },
+                { label: '제증명료', value: r.certFee },
+            ].filter(row => row.value > 0);
+
+            const otherTable = document.getElementById('rct-otherTable');
+            otherTable.innerHTML = otherRows.map((row, i) => {
+                const isLast = i === otherRows.length - 1;
+                const borderStyle = isLast ? '' : 'border-bottom:1px solid #e0d6c8;';
+                return `<tr>
+                    <td style="padding:5px 8px; ${borderStyle} color:#6b5d4d;">${row.label}</td>
+                    <td style="padding:5px 8px; ${borderStyle} text-align:right;">${formatNumber(row.value)}원</td>
+                </tr>`;
+            }).join('') + `<tr>
+                <td style="padding:5px 8px; background:#faf7f2; font-weight:600;">소계</td>
+                <td style="padding:5px 8px; background:#faf7f2; text-align:right; font-weight:600;">${formatNumber(r.otherTotal)}원</td>
+            </tr>`;
+
+            // 총계 및 소계 요약
+            document.getElementById('rct-grandTotal').textContent = formatNumber(r.grandTotal) + '원';
+            document.getElementById('rct-sumTax').textContent = formatNumber(r.acquisition.total) + '원';
+            document.getElementById('rct-sumBond').textContent = formatNumber(r.bond.discountAmount) + '원';
+            document.getElementById('rct-sumOther').textContent = formatNumber(r.otherTotal) + '원';
+
+            // PDF 생성
+            const element = document.getElementById('receipt');
+            element.style.display = 'block';
+
+            html2pdf().set({
+                margin: 0,
+                filename: `등기비용견적서_${today}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(element).save().then(() => {
+                element.style.display = 'none';
+            });
+        });
+    }
+
     // 일당 및 교통비 입력 포맷팅
     const transportFeeInput = document.getElementById('transportFee');
     if (transportFeeInput) {

@@ -1094,18 +1094,25 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('rct-sumBond').textContent = formatNumber(r.bond.discountAmount) + '원';
             document.getElementById('rct-sumOther').textContent = formatNumber(r.otherTotal) + '원';
 
-            // PDF 생성
+            // PDF 생성 (html2canvas는 position:fixed 오프스크린을 못 읽으므로 잠깐 visible 처리)
             const element = document.getElementById('receipt');
             element.style.display = 'block';
+            element.style.position = 'absolute';
+            element.style.left = '0';
+            element.style.top = '0';
+            element.style.zIndex = '-9999';
 
             html2pdf().set({
                 margin: 0,
                 filename: `등기비용견적서_${today}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }).from(element).save().then(() => {
                 element.style.display = 'none';
+                element.style.position = 'fixed';
+                element.style.left = '-9999px';
+                element.style.zIndex = '';
             });
         });
     }

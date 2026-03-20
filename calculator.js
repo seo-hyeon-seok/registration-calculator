@@ -649,7 +649,6 @@ function calculateTotal(params) {
 
     return {
         platform,
-        masterRegion: params.masterRegion || '',
         acquisition: acquisitionResult,
         bond: bondResult,
         stampTax,
@@ -716,11 +715,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 lawyerDiscountGroup.style.display = currentPlatform === 'general' ? 'block' : 'none';
             }
 
-            // 등기마스터일 때만 지역 구분 표시
-            const masterRegionGroup = document.getElementById('masterRegionGroup');
-            if (masterRegionGroup) {
-                masterRegionGroup.style.display = currentPlatform === 'master' ? 'block' : 'none';
-            }
         });
     });
 
@@ -762,24 +756,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
 
-                    // 등기마스터 지역 자동 감지
-                    if (currentPlatform === 'master') {
-                        const masterRegionSelect = document.getElementById('masterRegion');
-                        if (masterRegionSelect) {
-                            let detectedRegion = null;
-                            if (data.sido === '서울특별시') {
-                                detectedRegion = SEOUL_DISTRICT_TO_REGION[data.sigungu] || null;
-                            } else if (data.sido === '경기도') {
-                                const cityName = data.sigungu.split(' ')[0];
-                                detectedRegion = GYEONGGI_CITY_TO_REGION[cityName] || null;
-                            } else if (data.sido === '인천광역시') {
-                                detectedRegion = 'gyeonggi_mid';
-                            }
-                            if (detectedRegion) {
-                                masterRegionSelect.value = detectedRegion;
-                            }
-                        }
-                    }
+
                 }
             }).open();
         });
@@ -801,39 +778,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 else if (!isMetro && radio.value === 'other') radio.checked = true;
             });
 
-            // 등기마스터 지역 자동 감지 (마스터 플랫폼일 때만)
-            if (currentPlatform !== 'master') return;
-            const masterRegionSelect = document.getElementById('masterRegion');
-            if (!masterRegionSelect) return;
 
-            let detectedRegion = null;
-
-            // 서울 구 감지 (구 이름만 있어도 매칭)
-            for (const [district, region] of Object.entries(SEOUL_DISTRICT_TO_REGION)) {
-                if (addr.includes(district)) {
-                    detectedRegion = region;
-                    break;
-                }
-            }
-
-            // 경기도 시 감지
-            if (!detectedRegion) {
-                for (const [city, region] of Object.entries(GYEONGGI_CITY_TO_REGION)) {
-                    if (addr.includes(city)) {
-                        detectedRegion = region;
-                        break;
-                    }
-                }
-            }
-
-            // 인천 감지
-            if (!detectedRegion && addr.includes('인천')) {
-                detectedRegion = 'gyeonggi_mid';
-            }
-
-            if (detectedRegion) {
-                masterRegionSelect.value = detectedRegion;
-            }
         });
     }
 
@@ -902,20 +847,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const lawyerDiscountRadio = document.querySelector('input[name="lawyerDiscount"]:checked');
         const lawyerDiscount = lawyerDiscountRadio ? parseInt(lawyerDiscountRadio.value) : 0;
 
-        const masterRegionSelect = document.getElementById('masterRegion');
-        const masterRegion = masterRegionSelect ? masterRegionSelect.value : '';
-
-        // 등기마스터 지역 미선택 시 경고
-        if (currentPlatform === 'master' && !masterRegion) {
-            alert('등기마스터 지역을 선택해주세요.');
-            if (masterRegionSelect) masterRegionSelect.focus();
-            return;
-        }
-
         const params = {
             platform: currentPlatform,
             lawyerDiscount: lawyerDiscount,
-            masterRegion: masterRegion,
             propertyType: currentPropertyType,
             salePrice: salePrice,
             standardPrice: standardPrice,
@@ -971,15 +905,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (transportFeeRow) {
             transportFeeRow.style.display = 'flex';
         }
-        // 보수료 라벨 (등기마스터는 지역명 표시)
         const lawyerFeeLabel = document.getElementById('lawyerFeeLabel');
         if (lawyerFeeLabel) {
-            if (result.platform === 'master' && result.masterRegion) {
-                const regionLabel = MASTER_REGION_LABEL[result.masterRegion] || '';
-                lawyerFeeLabel.textContent = regionLabel ? `보수료 (${regionLabel})` : '보수료';
-            } else {
-                lawyerFeeLabel.textContent = '보수료';
-            }
+            lawyerFeeLabel.textContent = '보수료';
         }
 
         // 할인 적용 시 원래 금액 표시, 아니면 할인된 금액 표시

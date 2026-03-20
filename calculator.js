@@ -1033,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 영수증 출력 (PDF)
+    // 영수증 출력 (새 창 인쇄)
     const printReceiptBtn = document.getElementById('printReceiptBtn');
     if (printReceiptBtn) {
         printReceiptBtn.addEventListener('click', function() {
@@ -1044,25 +1044,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
             const address = document.getElementById('address').value || '-';
 
-            // 기본 정보
-            document.getElementById('rct-date').textContent = today;
-            document.getElementById('rct-platform').textContent = platformNames[r.platform] || r.platform;
-            document.getElementById('rct-salePrice').textContent = formatNumber(r.salePrice) + '원';
-            document.getElementById('rct-address').textContent = address;
-
-            // 취득세
-            document.getElementById('rct-acqTax').textContent = formatNumber(r.acquisition.acquisitionTax) + '원';
-            document.getElementById('rct-eduTax').textContent = formatNumber(r.acquisition.educationTax) + '원';
-            document.getElementById('rct-ruralTax').textContent = formatNumber(r.acquisition.ruralTax) + '원';
-            document.getElementById('rct-ruralTaxRow').style.display = r.acquisition.ruralTax > 0 ? '' : 'none';
-            document.getElementById('rct-acqTotal').textContent = formatNumber(r.acquisition.total) + '원';
-            document.getElementById('rct-taxNote').textContent = r.acquisition.note || '';
-
-            // 채권
-            document.getElementById('rct-bondAmount').textContent = formatNumber(r.bond.bondAmount) + '원';
-            document.getElementById('rct-bondDiscount').textContent = formatNumber(r.bond.discountAmount) + '원';
-
-            // 기타 비용 테이블 동적 생성
+            // 기타 비용 행 생성
             const otherRows = [
                 { label: '인지대', value: r.stampTax },
                 { label: '증지대', value: r.registrationFee },
@@ -1075,40 +1057,104 @@ document.addEventListener('DOMContentLoaded', function() {
                 { label: '제증명료', value: r.certFee },
             ].filter(row => row.value > 0);
 
-            const otherTable = document.getElementById('rct-otherTable');
-            otherTable.innerHTML = otherRows.map((row, i) => {
+            const otherRowsHtml = otherRows.map((row, i) => {
                 const isLast = i === otherRows.length - 1;
-                const borderStyle = isLast ? '' : 'border-bottom:1px solid #e0d6c8;';
                 return `<tr>
-                    <td style="padding:5px 8px; ${borderStyle} color:#6b5d4d;">${row.label}</td>
-                    <td style="padding:5px 8px; ${borderStyle} text-align:right;">${formatNumber(row.value)}원</td>
+                    <td style="padding:6px 10px;${!isLast ? 'border-bottom:1px solid #e0d6c8;' : ''} color:#6b5d4d;">${row.label}</td>
+                    <td style="padding:6px 10px;${!isLast ? 'border-bottom:1px solid #e0d6c8;' : ''} text-align:right;">${formatNumber(row.value)}원</td>
                 </tr>`;
-            }).join('') + `<tr>
-                <td style="padding:5px 8px; background:#faf7f2; font-weight:600;">소계</td>
-                <td style="padding:5px 8px; background:#faf7f2; text-align:right; font-weight:600;">${formatNumber(r.otherTotal)}원</td>
-            </tr>`;
+            }).join('');
 
-            // 총계 및 소계 요약
-            document.getElementById('rct-grandTotal').textContent = formatNumber(r.grandTotal) + '원';
-            document.getElementById('rct-sumTax').textContent = formatNumber(r.acquisition.total) + '원';
-            document.getElementById('rct-sumBond').textContent = formatNumber(r.bond.discountAmount) + '원';
-            document.getElementById('rct-sumOther').textContent = formatNumber(r.otherTotal) + '원';
+            const ruralTaxRow = r.acquisition.ruralTax > 0
+                ? `<tr><td style="padding:6px 10px; border-bottom:1px solid #e0d6c8; color:#6b5d4d;">농어촌특별세</td><td style="padding:6px 10px; border-bottom:1px solid #e0d6c8; text-align:right;">${formatNumber(r.acquisition.ruralTax)}원</td></tr>`
+                : '';
 
-            // PDF 생성 - 원본을 클론해서 body에 직접 붙였다가 제거 (렌더링 안정성 확보)
-            const source = document.getElementById('receipt');
-            const clone = source.cloneNode(true);
-            clone.style.cssText = 'display:block; position:absolute; top:0; left:0; width:210mm; background:#fff; z-index:-1;';
-            document.body.appendChild(clone);
+            const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>등기비용 견적서</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Pretendard', -apple-system, sans-serif; color: #2c2416; background: #fff; padding: 12mm 14mm; font-size: 13px; line-height: 1.6; }
+  h1 { text-align:center; font-size:22px; letter-spacing:2px; color:#3d3229; padding-bottom:6mm; border-bottom:2px solid #3d3229; margin-bottom:6mm; }
+  .date { text-align:center; font-size:12px; color:#8b7355; margin-top:-4mm; margin-bottom:6mm; }
+  table { width:100%; border-collapse:collapse; margin-bottom:5mm; }
+  .info-table td { padding:5px 8px; font-size:12px; }
+  .info-table td.label { background:#f5f0e8; color:#6b5d4d; font-weight:600; width:22%; }
+  .section-title { background:#3d3229; color:#fff; padding:5px 10px; font-size:13px; font-weight:600; border-radius:4px 4px 0 0; margin-bottom:0; }
+  .detail-table { border:1px solid #e0d6c8; border-top:none; }
+  .detail-table td { padding:6px 10px; }
+  .detail-table tr.subtotal td { background:#faf7f2; font-weight:600; }
+  .detail-table td.right { text-align:right; }
+  .detail-table td.label { color:#6b5d4d; }
+  .total-bar { background:#3d3229; color:#fff; border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:3mm; }
+  .total-bar .amount { color:#f5c842; font-size:18px; font-weight:700; }
+  .summary { display:flex; gap:0; font-size:11px; color:#6b5d4d; border:1px solid #e0d6c8; border-radius:4px; margin-bottom:5mm; }
+  .summary div { flex:1; padding:5px 8px; text-align:center; border-right:1px solid #e0d6c8; }
+  .summary div:last-child { border-right:none; }
+  .summary .val { font-weight:600; color:#3d3229; font-size:12px; }
+  .note { font-size:11px; color:#8b7355; padding:4px 6px; }
+  .disclaimer { margin-top:5mm; padding:5px 8px; background:#f5f0e8; border-left:3px solid #8b7355; font-size:10px; color:#8b7355; line-height:1.6; }
+  @media print { body { padding: 8mm 10mm; } }
+</style>
+</head>
+<body>
+  <h1>부동산 등기비용 견적서</h1>
+  <div class="date">${today}</div>
 
-            html2pdf().set({
-                margin: 0,
-                filename: `등기비용견적서_${today}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(clone).save().then(() => {
-                document.body.removeChild(clone);
-            });
+  <table class="info-table">
+    <tr>
+      <td class="label">플랫폼</td><td>${platformNames[r.platform] || r.platform}</td>
+      <td class="label">매매대금</td><td><strong>${formatNumber(r.salePrice)}원</strong></td>
+    </tr>
+    <tr>
+      <td class="label">주소</td><td colspan="3">${address}</td>
+    </tr>
+  </table>
+
+  <div class="section-title">취득세 관련</div>
+  <table class="detail-table">
+    <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">취득세</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.acquisitionTax)}원</td></tr>
+    <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">지방교육세</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.educationTax)}원</td></tr>
+    ${ruralTaxRow}
+    <tr class="subtotal"><td>소계</td><td class="right">${formatNumber(r.acquisition.total)}원</td></tr>
+  </table>
+  ${r.acquisition.note ? `<div class="note">${r.acquisition.note}</div>` : ''}
+
+  <div class="section-title" style="margin-top:4mm;">국민주택채권</div>
+  <table class="detail-table">
+    <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">채권매입액</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.bond.bondAmount)}원</td></tr>
+    <tr class="subtotal"><td>실부담액 (할인매도)</td><td class="right">${formatNumber(r.bond.discountAmount)}원</td></tr>
+  </table>
+
+  <div class="section-title" style="margin-top:4mm;">기타 비용</div>
+  <table class="detail-table">
+    ${otherRowsHtml}
+    <tr class="subtotal"><td>소계</td><td class="right">${formatNumber(r.otherTotal)}원</td></tr>
+  </table>
+
+  <div style="margin-top:5mm;">
+    <div class="total-bar">
+      <span>총 등기비용</span>
+      <span class="amount">${formatNumber(r.grandTotal)}원</span>
+    </div>
+    <div class="summary">
+      <div>취득세 관련<br><span class="val">${formatNumber(r.acquisition.total)}원</span></div>
+      <div>채권 할인부담금<br><span class="val">${formatNumber(r.bond.discountAmount)}원</span></div>
+      <div>기타 비용<br><span class="val">${formatNumber(r.otherTotal)}원</span></div>
+    </div>
+  </div>
+
+  <div class="disclaimer">※ 본 견적서는 예상 금액이며 실제 비용과 차이가 있을 수 있습니다. 정확한 금액은 관할 관청 또는 법무사에게 문의하세요.</div>
+</body>
+</html>`;
+
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            setTimeout(() => { win.print(); }, 500);
         });
     }
 

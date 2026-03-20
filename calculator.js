@@ -583,8 +583,8 @@ function calculateLawyerFeeMaster(_masterRegion, salePrice) {
         }
     }
 
-    // 10% 할인 적용 (부가세 포함 금액 기준)
-    const total = Math.round(fee * 0.9);
+    // 10% 할인 적용 (부가세 포함 금액 기준, 1000원 단위 반올림)
+    const total = Math.round(fee * 0.9 / 1000) * 1000;
     const baseFee = Math.round(total / 1.1);
     const vat = total - baseFee;
 

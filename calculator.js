@@ -902,13 +902,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('ruralTax').textContent = formatNumber(result.acquisition.ruralTax) + '원';
         document.getElementById('acquisitionTaxTotal').textContent = formatNumber(result.acquisition.total) + '원';
         const taxNoteEl = document.getElementById('taxNote');
-        let taxNoteText = result.acquisition.note;
         const taxDiscountRadio = document.querySelector('input[name="taxDiscount"]:checked');
+        let taxNoteHtml = result.acquisition.note || '';
         if (taxDiscountRadio && taxDiscountRadio.value !== 'none' && result.salePrice > 1200000000) {
             const discountLabel = taxDiscountRadio.value === 'firstTime' ? '생애최초감면' : '신생아감면';
-            taxNoteText += (taxNoteText ? ' ' : '') + `※ 매매대금 12억 초과로 ${discountLabel}이 적용되지 않았습니다.`;
+            const noticeText = `※ 매매대금 12억 초과로 ${discountLabel}이 적용되지 않았습니다.`;
+            taxNoteHtml += (taxNoteHtml ? ' ' : '') + `<span style="color:#e53935;">${noticeText}</span>`;
         }
-        taxNoteEl.textContent = taxNoteText;
+        taxNoteEl.innerHTML = taxNoteHtml;
 
         // 국민주택채권
         document.getElementById('bondAmount').textContent = formatNumber(result.bond.bondAmount) + '원';

@@ -294,11 +294,13 @@ function calculateAcquisitionTax(params) {
                 note = '9억원 초과 세율 3% 적용';
             }
 
-            // 감면 적용 표시
-            if (taxDiscountType === 'firstTime') {
-                note += ' (생애최초 감면 적용)';
-            } else if (taxDiscountType === 'newborn') {
-                note += ' (신생아 감면 적용)';
+            // 감면 적용 표시 (12억 이하만 해당)
+            if (salePrice <= 1200000000) {
+                if (taxDiscountType === 'firstTime') {
+                    note += ' (생애최초 감면 적용)';
+                } else if (taxDiscountType === 'newborn') {
+                    note += ' (신생아 감면 적용)';
+                }
             }
         } else if (houseCount === 2 && isRegulated) {
             taxRate = 0.08;
@@ -349,8 +351,8 @@ function calculateAcquisitionTax(params) {
     // 농어촌특별세
     let ruralTax = salePrice * ruralTaxRate;
 
-    // 감면 적용 (주택 1주택자만)
-    if (propertyType === 'apartment' && houseCount === 1) {
+    // 감면 적용 (주택 1주택자만, 매매대금 12억 이하만 해당)
+    if (propertyType === 'apartment' && houseCount === 1 && salePrice <= 1200000000) {
         if (taxDiscountType === 'firstTime') {
             // 생애최초 감면: 취득세 200만원, 교육세 20만원
             acquisitionTax = Math.max(0, acquisitionTax - 2000000);

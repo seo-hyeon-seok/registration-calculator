@@ -1076,27 +1076,27 @@ document.addEventListener('DOMContentLoaded', function() {
 <title>등기비용 견적서</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: 'Pretendard', -apple-system, sans-serif; color: #2c2416; background: #fff; padding: 12mm 14mm; font-size: 13px; line-height: 1.6; }
-  h1 { text-align:center; font-size:22px; letter-spacing:2px; color:#3d3229; padding-bottom:6mm; border-bottom:2px solid #3d3229; margin-bottom:6mm; }
-  .date { text-align:center; font-size:12px; color:#8b7355; margin-top:-4mm; margin-bottom:6mm; }
-  table { width:100%; border-collapse:collapse; margin-bottom:5mm; }
-  .info-table td { padding:5px 8px; font-size:12px; }
-  .info-table td.label { background:#f5f0e8; color:#6b5d4d; font-weight:600; width:22%; }
-  .section-title { background:#3d3229; color:#fff; padding:5px 10px; font-size:13px; font-weight:600; border-radius:4px 4px 0 0; margin-bottom:0; }
+  body { font-family: 'Pretendard', -apple-system, sans-serif; color: #2c2416; background: #fff; padding: 8mm 10mm; font-size: 11px; line-height: 1.5; }
+  h1 { text-align:center; font-size:18px; letter-spacing:2px; color:#3d3229; padding-bottom:3mm; border-bottom:2px solid #3d3229; margin-bottom:3mm; }
+  .date { text-align:center; font-size:10px; color:#8b7355; margin-bottom:3mm; }
+  table { width:100%; border-collapse:collapse; margin-bottom:3mm; }
+  .info-table td { padding:3px 6px; font-size:11px; }
+  .info-table td.label { background:#f5f0e8; color:#6b5d4d; font-weight:600; width:18%; }
+  .section-title { background:#3d3229; color:#fff; padding:3px 8px; font-size:11px; font-weight:600; border-radius:3px 3px 0 0; margin-bottom:0; }
   .detail-table { border:1px solid #e0d6c8; border-top:none; }
-  .detail-table td { padding:6px 10px; }
+  .detail-table td { padding:4px 8px; }
   .detail-table tr.subtotal td { background:#faf7f2; font-weight:600; }
   .detail-table td.right { text-align:right; }
   .detail-table td.label { color:#6b5d4d; }
-  .total-bar { background:#3d3229; color:#fff; border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:3mm; }
-  .total-bar .amount { color:#f5c842; font-size:18px; font-weight:700; }
-  .summary { display:flex; gap:0; font-size:11px; color:#6b5d4d; border:1px solid #e0d6c8; border-radius:4px; margin-bottom:5mm; }
-  .summary div { flex:1; padding:5px 8px; text-align:center; border-right:1px solid #e0d6c8; }
+  .total-bar { background:#3d3229; color:#fff; border-radius:4px; padding:6px 10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:2mm; }
+  .total-bar .amount { color:#f5c842; font-size:15px; font-weight:700; }
+  .summary { display:flex; gap:0; font-size:10px; color:#6b5d4d; border:1px solid #e0d6c8; border-radius:3px; margin-bottom:3mm; }
+  .summary div { flex:1; padding:3px 6px; text-align:center; border-right:1px solid #e0d6c8; }
   .summary div:last-child { border-right:none; }
-  .summary .val { font-weight:600; color:#3d3229; font-size:12px; }
-  .note { font-size:11px; color:#8b7355; padding:4px 6px; }
-  .disclaimer { margin-top:5mm; padding:5px 8px; background:#f5f0e8; border-left:3px solid #8b7355; font-size:10px; color:#8b7355; line-height:1.6; }
-  @media print { body { padding: 8mm 10mm; } }
+  .summary .val { font-weight:600; color:#3d3229; font-size:11px; }
+  .note { font-size:10px; color:#8b7355; padding:2px 4px; }
+  .disclaimer { margin-top:3mm; padding:3px 6px; background:#f5f0e8; border-left:3px solid #8b7355; font-size:9px; color:#8b7355; line-height:1.5; }
+  @media print { @page { margin: 0; } body { padding: 8mm 10mm; } }
 </style>
 </head>
 <body>
@@ -1122,19 +1122,19 @@ document.addEventListener('DOMContentLoaded', function() {
   </table>
   ${r.acquisition.note ? `<div class="note">${r.acquisition.note}</div>` : ''}
 
-  <div class="section-title" style="margin-top:4mm;">국민주택채권</div>
+  <div class="section-title" style="margin-top:3mm;">국민주택채권</div>
   <table class="detail-table">
     <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">채권매입액</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.bond.bondAmount)}원</td></tr>
     <tr class="subtotal"><td>실부담액 (할인매도)</td><td class="right">${formatNumber(r.bond.discountAmount)}원</td></tr>
   </table>
 
-  <div class="section-title" style="margin-top:4mm;">기타 비용</div>
+  <div class="section-title" style="margin-top:3mm;">기타 비용</div>
   <table class="detail-table">
     ${otherRowsHtml}
     <tr class="subtotal"><td>소계</td><td class="right">${formatNumber(r.otherTotal)}원</td></tr>
   </table>
 
-  <div style="margin-top:5mm;">
+  <div style="margin-top:3mm;">
     <div class="total-bar">
       <span>총 등기비용</span>
       <span class="amount">${formatNumber(r.grandTotal)}원</span>

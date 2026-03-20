@@ -557,27 +557,35 @@ function calculateLawyerFeeBubtong(salePrice) {
 }
 
 /**
- * 법무사 수수료 계산 (등기마스터용 - 매매가 구간 + 지역 가산금)
+ * 법무사 수수료 계산 (등기마스터용 - 법무통 동일 방식 × 10% 할인)
  */
-function calculateLawyerFeeMaster(masterRegion, salePrice) {
-    // 매매가 구간별 기본 보수료
-    const tiers = MASTER_FEE_TIERS;
-    let baseTierFee = tiers[0].fee; // 2억 미만: 최솟값 고정
-    for (const tier of tiers) {
-        if (salePrice <= tier.max) {
-            baseTierFee = tier.fee;
-            break;
+function calculateLawyerFeeMaster(_masterRegion, salePrice) {
+    // 법무통과 동일한 보간 테이블 사용
+    const table = BUBTONG_FEE_TABLE;
+    let fee;
+
+    if (salePrice <= table[0][0]) {
+        fee = table[0][1];
+    } else if (salePrice >= table[table.length - 1][0]) {
+        const [p1, f1] = table[table.length - 2];
+        const [p2, f2] = table[table.length - 1];
+        const rate = (f2 - f1) / (p2 - p1);
+        fee = Math.round(f2 + rate * (salePrice - p2));
+    } else {
+        for (let i = 0; i < table.length - 1; i++) {
+            const [p1, f1] = table[i];
+            const [p2, f2] = table[i + 1];
+            if (salePrice <= p2) {
+                const ratio = (salePrice - p1) / (p2 - p1);
+                fee = Math.round(f1 + ratio * (f2 - f1));
+                break;
+            }
         }
-        baseTierFee = tiers[tiers.length - 1].fee; // 30억 초과: 최댓값 고정
     }
 
-    // 지역 가산금
-    const surcharge = MASTER_REGION_SURCHARGE[masterRegion] ?? 0;
-    const fee = baseTierFee + surcharge;
-
-    // fee는 부가세 포함 금액 → 역산으로 분리
-    const total = fee;
-    const baseFee = Math.round(fee / 1.1);
+    // 10% 할인 적용 (부가세 포함 금액 기준)
+    const total = Math.round(fee * 0.9);
+    const baseFee = Math.round(total / 1.1);
     const vat = total - baseFee;
 
     return {

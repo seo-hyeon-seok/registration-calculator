@@ -816,6 +816,15 @@ document.addEventListener('DOMContentLoaded', function() {
     handlePriceInput(salePriceInput, 'salePriceKorean');
     handlePriceInput(standardPriceInput, 'standardPriceKorean');
 
+    // 매매대금 12억 초과 시 감면 안내 메세지 표시
+    const taxDiscountLimitNotice = document.getElementById('taxDiscountLimitNotice');
+    if (salePriceInput && taxDiscountLimitNotice) {
+        salePriceInput.addEventListener('input', function() {
+            const price = parseInputNumber(this.value);
+            taxDiscountLimitNotice.style.display = price > 1200000000 ? 'block' : 'none';
+        });
+    }
+
     // 계산 함수
     function doCalculate() {
         const salePrice = parseInputNumber(salePriceInput.value);

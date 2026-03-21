@@ -1056,6 +1056,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const address = document.getElementById('address').value || '-';
             const caseName = document.getElementById('caseName').value || '소유권이전';
             const standardPriceVal = parseInputNumber(document.getElementById('standardPrice').value);
+            const taxDiscountRadio = document.querySelector('input[name="taxDiscount"]:checked');
+            const discountLimitNotice = (taxDiscountRadio && taxDiscountRadio.value !== 'none' && r.salePrice > 1200000000)
+                ? `※ 매매대금 12억 초과로 ${taxDiscountRadio.value === 'firstTime' ? '생애최초감면' : '신생아감면'}이 적용되지 않았습니다.`
+                : '';
 
 
             const html = `<!DOCTYPE html>
@@ -1120,6 +1124,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <tr class="subtotal"><td>소계</td><td class="right">${formatNumber(r.acquisition.total + r.stampTax + r.registrationFee + r.taxReportFee + r.certFee)}원</td></tr>
   </table>
   ${r.acquisition.note ? `<div class="note">${r.acquisition.note}</div>` : ''}
+  ${discountLimitNotice ? `<div class="note" style="color:#c0392b;">${discountLimitNotice}</div>` : ''}
 
   <div class="section-title" style="margin-top:3mm;">국민주택채권</div>
   <table class="detail-table">

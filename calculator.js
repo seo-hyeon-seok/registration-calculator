@@ -1057,30 +1057,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const caseName = document.getElementById('caseName').value || '소유권이전';
             const standardPriceVal = parseInputNumber(document.getElementById('standardPrice').value);
 
-            // 기타 비용 행 생성
-            const otherRows = [
-                { label: '인지대', value: r.stampTax },
-                { label: '증지대', value: r.registrationFee },
-                { label: '일당 및 교통비', value: r.transportFee },
-                { label: '보수료', value: r.lawyerFee },
-                { label: '부가가치세', value: r.lawyerVat },
-                { label: '채권 매입매도신청', value: r.bondServiceFee },
-                { label: '취득세 신고 납부', value: r.taxReportFee },
-                { label: '제출대행 및 우편료', value: r.submissionFee },
-                { label: '제증명료', value: r.certFee },
-            ].filter(row => row.value > 0);
-
-            const otherRowsHtml = otherRows.map((row, i) => {
-                const isLast = i === otherRows.length - 1;
-                return `<tr>
-                    <td style="padding:6px 10px;${!isLast ? 'border-bottom:1px solid #e0d6c8;' : ''} color:#6b5d4d;">${row.label}</td>
-                    <td style="padding:6px 10px;${!isLast ? 'border-bottom:1px solid #e0d6c8;' : ''} text-align:right;">${formatNumber(row.value)}원</td>
-                </tr>`;
-            }).join('');
-
-            const ruralTaxRow = r.acquisition.ruralTax > 0
-                ? `<tr><td style="padding:6px 10px; border-bottom:1px solid #e0d6c8; color:#6b5d4d;">농어촌특별세</td><td style="padding:6px 10px; border-bottom:1px solid #e0d6c8; text-align:right;">${formatNumber(r.acquisition.ruralTax)}원</td></tr>`
-                : '';
 
             const html = `<!DOCTYPE html>
 <html lang="ko">
@@ -1129,25 +1105,33 @@ document.addEventListener('DOMContentLoaded', function() {
     </tr>
   </table>
 
-  <div class="section-title">취득세 관련</div>
+  <div class="section-title">취득세 및 등기신청 관련</div>
   <table class="detail-table">
     <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">취득세${r.acquisition.acquisitionDiscount > 0 ? ` <span style="color:#c0392b;font-size:11px;">(${r.acquisition.discountLabel} -${formatNumber(r.acquisition.acquisitionDiscount)}원 적용)</span>` : ''}</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.acquisitionTax)}원</td></tr>
     <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">지방교육세${r.acquisition.educationDiscount > 0 ? ` <span style="color:#c0392b;font-size:11px;">(${r.acquisition.discountLabel} -${formatNumber(r.acquisition.educationDiscount)}원 적용)</span>` : ''}</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.educationTax)}원</td></tr>
-    ${ruralTaxRow}
-    <tr class="subtotal"><td>소계</td><td class="right">${formatNumber(r.acquisition.total)}원</td></tr>
+    ${r.acquisition.ruralTax > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">농어촌특별세</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.ruralTax)}원</td></tr>` : ''}
+    ${r.stampTax > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">인지대</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.stampTax)}원</td></tr>` : ''}
+    ${r.registrationFee > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">증지대</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.registrationFee)}원</td></tr>` : ''}
+    ${r.taxReportFee > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">취득세 신고 납부</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.taxReportFee)}원</td></tr>` : ''}
+    ${r.certFee > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">제증명료</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.certFee)}원</td></tr>` : ''}
+    <tr class="subtotal"><td>소계</td><td class="right">${formatNumber(r.acquisition.total + r.stampTax + r.registrationFee + r.taxReportFee + r.certFee)}원</td></tr>
   </table>
   ${r.acquisition.note ? `<div class="note">${r.acquisition.note}</div>` : ''}
 
   <div class="section-title" style="margin-top:3mm;">국민주택채권</div>
   <table class="detail-table">
     <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">채권매입액</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.bond.bondAmount)}원</td></tr>
-    <tr class="subtotal"><td>실부담액 (할인매도) ${r.bond.discountRate}%</td><td class="right">${formatNumber(r.bond.discountAmount)}원</td></tr>
+    ${r.bondServiceFee > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">채권 매입매도신청</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.bondServiceFee)}원</td></tr>` : ''}
+    <tr class="subtotal"><td>실부담액 (할인매도) ${r.bond.discountRate}%</td><td class="right">${formatNumber(r.bond.discountAmount + r.bondServiceFee)}원</td></tr>
   </table>
 
-  <div class="section-title" style="margin-top:3mm;">기타 비용</div>
+  <div class="section-title" style="margin-top:3mm;">보수료 및 기타비용</div>
   <table class="detail-table">
-    ${otherRowsHtml}
-    <tr class="subtotal"><td>소계</td><td class="right">${formatNumber(r.otherTotal)}원</td></tr>
+    ${r.lawyerFee > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">보수료</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.lawyerFee)}원</td></tr>` : ''}
+    ${r.lawyerVat > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">부가가치세</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.lawyerVat)}원</td></tr>` : ''}
+    ${r.transportFee > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">일당 및 교통비</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.transportFee)}원</td></tr>` : ''}
+    ${r.submissionFee > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">제출대행 및 우편료</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.submissionFee)}원</td></tr>` : ''}
+    <tr class="subtotal"><td>소계</td><td class="right">${formatNumber(r.lawyerFee + r.lawyerVat + r.transportFee + r.submissionFee)}원</td></tr>
   </table>
 
   <div style="margin-top:3mm;">
@@ -1156,9 +1140,9 @@ document.addEventListener('DOMContentLoaded', function() {
       <span class="amount">${formatNumber(r.grandTotal)}원</span>
     </div>
     <div class="summary">
-      <div>취득세 관련<br><span class="val">${formatNumber(r.acquisition.total)}원</span></div>
-      <div>채권 할인부담금<br><span class="val">${formatNumber(r.bond.discountAmount)}원</span></div>
-      <div>기타 비용<br><span class="val">${formatNumber(r.otherTotal)}원</span></div>
+      <div>취득세 및 등기신청<br><span class="val">${formatNumber(r.acquisition.total + r.stampTax + r.registrationFee + r.taxReportFee + r.certFee)}원</span></div>
+      <div>채권 실부담금<br><span class="val">${formatNumber(r.bond.discountAmount + r.bondServiceFee)}원</span></div>
+      <div>보수료 및 기타<br><span class="val">${formatNumber(r.lawyerFee + r.lawyerVat + r.transportFee + r.submissionFee)}원</span></div>
     </div>
   </div>
 

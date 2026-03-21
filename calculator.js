@@ -1083,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', function() {
   table { width:100%; border-collapse:collapse; margin-bottom:3mm; }
   .info-table td { padding:3px 6px; font-size:13px; }
   .info-table td.label { background:#f5f0e8; color:#6b5d4d; font-weight:600; width:18%; }
-  .section-title { background:#3d3229; color:#fff; padding:3px 8px; font-size:13px; font-weight:600; border-radius:3px 3px 0 0; margin-bottom:0; }
+  .section-title { background:#3d3229; color:#fff; padding:7px 8px; font-size:13px; font-weight:600; border-radius:3px 3px 0 0; margin-bottom:0; }
   .detail-table { border:1px solid #e0d6c8; border-top:none; }
   .detail-table td { padding:4px 8px; }
   .detail-table tr.subtotal td { background:#faf7f2; font-weight:600; }

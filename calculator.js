@@ -1146,7 +1146,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 
-  <div class="disclaimer">※ 본 견적서는 예상 금액이며 실제 비용과 차이가 있을 수 있습니다. 정확한 금액은 관할 관청 또는 법무사에게 문의하세요.</div>
+  <div class="disclaimer">※ 본 견적서는 예상 금액이며 실제 비용과 차이가 있을 수 있습니다.</div>
 </body>
 </html>`;
 

@@ -1040,9 +1040,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!lastResult) return;
 
             const r = lastResult;
-            const platformNames = { general: '일반', master: '등기마스터', bubtong: '법무통' };
             const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
             const address = document.getElementById('address').value || '-';
+            const caseName = document.getElementById('caseName').value || '소유권이전';
+            const standardPriceVal = parseInputNumber(document.getElementById('standardPrice').value);
 
             // 기타 비용 행 생성
             const otherRows = [
@@ -1105,8 +1106,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <table class="info-table">
     <tr>
-      <td class="label">플랫폼</td><td>${platformNames[r.platform] || r.platform}</td>
+      <td class="label">사건명</td><td>${caseName}</td>
       <td class="label">매매대금</td><td><strong>${formatNumber(r.salePrice)}원</strong></td>
+    </tr>
+    <tr>
+      <td class="label">과세표준액</td><td colspan="3">${standardPriceVal > 0 ? formatNumber(standardPriceVal) + '원' : '-'}</td>
     </tr>
     <tr>
       <td class="label">주소</td><td colspan="3">${address}</td>

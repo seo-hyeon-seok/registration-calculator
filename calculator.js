@@ -1154,7 +1154,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 
-  <div class="disclaimer">※ 본 견적서는 예상 금액이며 실제 비용과 차이가 있을 수 있습니다.</div>
+  <div class="disclaimer">※ 본 견적서는 예상 금액이며 국민주택채권은 등기 당일 시세로 변동 됩니다.</div>
 </div>
 </body>
 </html>`;

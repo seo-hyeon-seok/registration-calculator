@@ -1129,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="section-title" style="margin-top:3mm;">국민주택채권</div>
   <table class="detail-table">
     <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">채권매입액</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.bond.bondAmount)}원</td></tr>
-    <tr class="subtotal"><td>실부담액 (할인매도)</td><td class="right">${formatNumber(r.bond.discountAmount)}원</td></tr>
+    <tr class="subtotal"><td>실부담액 (할인매도) ${r.bond.discountRate}%</td><td class="right">${formatNumber(r.bond.discountAmount)}원</td></tr>
   </table>
 
   <div class="section-title" style="margin-top:3mm;">기타 비용</div>

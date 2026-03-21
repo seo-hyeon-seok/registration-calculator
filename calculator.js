@@ -1107,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .summary div { flex:1; padding:3px 6px; text-align:center; border-right:1px solid #e0d6c8; }
   .summary div:last-child { border-right:none; }
   .summary .val { font-weight:600; color:#3d3229; font-size:13px; }
-  .note { font-size:12px; color:#8b7355; padding:2px 4px; }
+  .note { font-size:13px; font-weight:600; color:#8b7355; padding:2px 4px; }
   .disclaimer { margin-top:3mm; padding:3px 6px; background:#f5f0e8; border-left:3px solid #8b7355; font-size:11px; color:#8b7355; line-height:1.5; }
   @media print { @page { margin: 0; } body { padding: 8mm 10mm; } }
 </style>

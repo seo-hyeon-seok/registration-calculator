@@ -352,13 +352,22 @@ function calculateAcquisitionTax(params) {
     let ruralTax = salePrice * ruralTaxRate;
 
     // 감면 적용 (주택 1주택자만, 매매대금 12억 이하만 해당)
+    let acquisitionDiscount = 0;
+    let educationDiscount = 0;
+    let discountLabel = '';
     if (propertyType === 'apartment' && houseCount === 1 && salePrice <= 1200000000) {
         if (taxDiscountType === 'firstTime') {
             // 생애최초 감면: 취득세 200만원, 교육세 20만원
+            acquisitionDiscount = Math.min(acquisitionTax, 2000000);
+            educationDiscount = Math.min(educationTax, 200000);
+            discountLabel = '생애최초감면';
             acquisitionTax = Math.max(0, acquisitionTax - 2000000);
             educationTax = Math.max(0, educationTax - 200000);
         } else if (taxDiscountType === 'newborn') {
             // 신생아 감면: 취득세 500만원, 교육세 50만원
+            acquisitionDiscount = Math.min(acquisitionTax, 5000000);
+            educationDiscount = Math.min(educationTax, 500000);
+            discountLabel = '신생아감면';
             acquisitionTax = Math.max(0, acquisitionTax - 5000000);
             educationTax = Math.max(0, educationTax - 500000);
         }
@@ -370,7 +379,10 @@ function calculateAcquisitionTax(params) {
         ruralTax: Math.round(ruralTax),
         total: Math.round(acquisitionTax) + Math.round(educationTax) + Math.round(ruralTax),
         taxRate,
-        note
+        note,
+        acquisitionDiscount,
+        educationDiscount,
+        discountLabel
     };
 }
 
@@ -1119,8 +1131,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <div class="section-title">취득세 관련</div>
   <table class="detail-table">
-    <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">취득세</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.acquisitionTax)}원</td></tr>
-    <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">지방교육세</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.educationTax)}원</td></tr>
+    <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">취득세${r.acquisition.acquisitionDiscount > 0 ? ` <span style="color:#c0392b;font-size:11px;">(${r.acquisition.discountLabel} -${formatNumber(r.acquisition.acquisitionDiscount)}원 적용)</span>` : ''}</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.acquisitionTax)}원</td></tr>
+    <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">지방교육세${r.acquisition.educationDiscount > 0 ? ` <span style="color:#c0392b;font-size:11px;">(${r.acquisition.discountLabel} -${formatNumber(r.acquisition.educationDiscount)}원 적용)</span>` : ''}</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.educationTax)}원</td></tr>
     ${ruralTaxRow}
     <tr class="subtotal"><td>소계</td><td class="right">${formatNumber(r.acquisition.total)}원</td></tr>
   </table>

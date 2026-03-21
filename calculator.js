@@ -1065,7 +1065,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <title>등기비용 견적서</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: 'Pretendard', -apple-system, sans-serif; color: #2c2416; background: #fff; padding: 8mm 10mm; font-size: 13px; line-height: 1.5; }
+  body { font-family: 'Pretendard', -apple-system, sans-serif; color: #2c2416; background: #fff; margin: 0; padding: 8mm 0; font-size: 13px; line-height: 1.5; }
+  .page { max-width: 155mm; margin: 0 auto; }
   h1 { text-align:center; font-size:20px; letter-spacing:2px; color:#3d3229; padding-bottom:3mm; border-bottom:2px solid #3d3229; margin-bottom:3mm; }
   .date { text-align:center; font-size:12px; color:#8b7355; margin-bottom:3mm; }
   table { width:100%; border-collapse:collapse; margin-bottom:3mm; }
@@ -1085,11 +1086,12 @@ document.addEventListener('DOMContentLoaded', function() {
   .summary .val { font-weight:600; color:#3d3229; font-size:13px; }
   .note { font-size:13px; font-weight:600; color:#8b7355; padding:2px 4px; }
   .disclaimer { margin-top:3mm; padding:3px 6px; background:#f5f0e8; border-left:3px solid #8b7355; font-size:11px; color:#8b7355; line-height:1.5; }
-  @media print { @page { margin: 0; } body { padding: 8mm 10mm; } }
+  @media print { @page { margin: 0; } body { padding: 8mm 0; } }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 </style>
 </head>
 <body>
+<div class="page">
   <h1>부동산 등기비용 견적서</h1>
   <div class="date">${today}</div>
 
@@ -1148,6 +1150,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 
   <div class="disclaimer">※ 본 견적서는 예상 금액이며 실제 비용과 차이가 있을 수 있습니다.</div>
+</div>
 </body>
 </html>`;
 

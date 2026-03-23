@@ -1092,6 +1092,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <head>
 <meta charset="UTF-8">
 <title>등기비용 견적서</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family: 'Pretendard', -apple-system, sans-serif; color: #2c2416; background: #fff; margin: 0; padding: 15mm 0 8mm; font-size: 13px; line-height: 1.5; }
@@ -1115,12 +1116,23 @@ document.addEventListener('DOMContentLoaded', function() {
   .summary .val { font-weight:600; color:#3d3229; font-size:13px; }
   .note { font-size:13px; font-weight:600; color:#8b7355; padding:2px 4px; }
   .disclaimer { margin-top:3mm; padding:3px 6px; background:#f5f0e8; border-left:3px solid #8b7355; font-size:11px; color:#8b7355; line-height:1.5; }
-  @media print { @page { margin: 0; } body { padding: 15mm 0 8mm; } }
+  .toolbar { position:fixed; top:0; left:0; right:0; background:#3d3229; padding:10px 20px; display:flex; gap:10px; justify-content:flex-end; z-index:999; }
+  .toolbar button { padding:8px 18px; border:none; border-radius:6px; font-size:13px; cursor:pointer; font-family:inherit; font-weight:600; }
+  .btn-image { background:#a08060; color:#fff; }
+  .btn-pdf { background:#f5c842; color:#3d3229; }
+  .btn-close { background:transparent; color:#f5f0e8; border:1px solid rgba(255,255,255,0.4) !important; }
+  @media print { .toolbar { display:none; } @page { margin: 0; } body { padding: 15mm 0 8mm; } }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 </style>
 </head>
 <body>
-<div class="page">
+<div class="toolbar">
+  <button class="btn-image" onclick="saveImage()">이미지 저장</button>
+  <button class="btn-pdf" onclick="window.print()">PDF 저장 / 인쇄</button>
+  <button class="btn-close" onclick="window.close()">✕ 닫기</button>
+</div>
+<div style="height:50px;"></div>
+<div class="page" id="receipt-page">
   <h1>부동산 등기비용 견적서</h1>
   <div class="date">${today}</div>
 
@@ -1181,6 +1193,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <div class="disclaimer">※ 본 견적서는 예상 금액이며 국민주택채권은 등기 당일 시세로 변동 됩니다.</div>
 </div>
+<script>
+function saveImage() {
+  var btn = document.querySelector('.btn-image');
+  btn.textContent = '저장 중...';
+  btn.disabled = true;
+  html2canvas(document.getElementById('receipt-page'), { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(function(canvas) {
+    var a = document.createElement('a');
+    a.download = '등기비용견적서.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    btn.textContent = '이미지 저장';
+    btn.disabled = false;
+  });
+}
+<\/script>
 </body>
 </html>`;
 
@@ -1188,7 +1215,6 @@ document.addEventListener('DOMContentLoaded', function() {
             win.document.write(html);
             win.document.close();
             win.focus();
-            setTimeout(() => { win.print(); }, 500);
         });
     }
 

@@ -1198,10 +1198,18 @@ function saveImage() {
   var btn = document.querySelector('.btn-image');
   btn.textContent = '저장 중...';
   btn.disabled = true;
+  var margin = 20;
   html2canvas(document.getElementById('receipt-page'), { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(function(canvas) {
+    var newCanvas = document.createElement('canvas');
+    newCanvas.width = canvas.width + margin * 2 * 2;
+    newCanvas.height = canvas.height + margin * 2 * 2;
+    var ctx = newCanvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, newCanvas.width, newCanvas.height);
+    ctx.drawImage(canvas, margin * 2, margin * 2);
     var a = document.createElement('a');
     a.download = '등기비용견적서.png';
-    a.href = canvas.toDataURL('image/png');
+    a.href = newCanvas.toDataURL('image/png');
     a.click();
     btn.textContent = '이미지 저장';
     btn.disabled = false;

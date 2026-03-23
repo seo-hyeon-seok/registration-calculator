@@ -881,15 +881,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const buyerCountInput = document.getElementById('buyerCount');
         const buyerCount = parseInt(buyerCountInput.value) || 1;
 
-        // 공동명의 지분 수집
+        // 공동명의 지분 수집 (% → 비율)
         const buyerShares = [];
         if (buyerCount >= 2) {
             for (let i = 0; i < buyerCount; i++) {
-                const numEl = document.getElementById(`buyerShare_num_${i}`);
-                const denEl = document.getElementById(`buyerShare_den_${i}`);
-                const numerator = numEl ? (parseInt(numEl.value) || 1) : 1;
-                const denominator = denEl ? (parseInt(denEl.value) || buyerCount) : buyerCount;
-                buyerShares.push({ numerator, denominator });
+                const pctEl = document.getElementById(`buyerShare_pct_${i}`);
+                const pct = pctEl ? (parseFloat(pctEl.value) || 0) : (100 / buyerCount);
+                buyerShares.push({ numerator: pct, denominator: 100 });
             }
         }
 
@@ -1199,6 +1197,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const buyerSharesContainer = document.getElementById('buyerSharesContainer');
     const buyerSharesList = document.getElementById('buyerSharesList');
 
+    function updateLastBuyerShare(count) {
+        const inputs = [];
+        for (let i = 0; i < count - 1; i++) {
+            inputs.push(document.getElementById(`buyerShare_pct_${i}`));
+        }
+        const lastInput = document.getElementById(`buyerShare_pct_${count - 1}`);
+        if (!lastInput) return;
+        const used = inputs.reduce((sum, el) => sum + (parseFloat(el ? el.value : 0) || 0), 0);
+        const remaining = Math.max(0, Math.round((100 - used) * 10) / 10);
+        lastInput.value = remaining;
+    }
+
     function renderBuyerShares(count) {
         if (!buyerSharesContainer || !buyerSharesList) return;
         if (count < 2) {
@@ -1208,18 +1218,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         buyerSharesContainer.style.display = 'block';
         buyerSharesList.innerHTML = '';
+        const equalShare = Math.round((100 / count) * 10) / 10;
         for (let i = 0; i < count; i++) {
+            const isLast = i === count - 1;
+            const defaultVal = isLast ? Math.round((100 - equalShare * (count - 1)) * 10) / 10 : equalShare;
             const row = document.createElement('div');
             row.style.cssText = 'display:flex; align-items:center; gap:8px; margin-bottom:8px;';
             row.innerHTML = `
                 <span style="font-size:14px; color:var(--text-primary); min-width:60px;">매수인${i + 1}</span>
-                <input type="number" id="buyerShare_num_${i}" value="1" min="1"
-                    style="width:60px; text-align:center; border:1px solid #c8b89a; border-radius:6px; padding:5px; font-size:14px;">
-                <span style="font-size:16px; color:var(--text-secondary);">/</span>
-                <input type="number" id="buyerShare_den_${i}" value="${count}" min="1"
-                    style="width:60px; text-align:center; border:1px solid #c8b89a; border-radius:6px; padding:5px; font-size:14px;">
+                <input type="number" id="buyerShare_pct_${i}" value="${defaultVal}" min="0" max="100" step="0.1"
+                    ${isLast ? 'readonly' : ''}
+                    style="width:75px; text-align:center; border:1px solid #c8b89a; border-radius:6px; padding:5px; font-size:14px;${isLast ? ' background:#f0ebe2; color:var(--text-secondary);' : ''}">
+                <span style="font-size:14px; color:var(--text-secondary);">%</span>
             `;
             buyerSharesList.appendChild(row);
+        }
+        // 앞 매수인 입력 시 마지막 자동 갱신
+        for (let i = 0; i < count - 1; i++) {
+            const el = document.getElementById(`buyerShare_pct_${i}`);
+            if (el) el.addEventListener('input', () => updateLastBuyerShare(count));
         }
     }
 

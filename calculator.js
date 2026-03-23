@@ -390,7 +390,7 @@ function calculateAcquisitionTax(params) {
  * 국민주택채권 매입액 계산
  */
 function calculateBond(params) {
-    const { propertyType, standardPrice, region, bondDiscountRate, buyerCount = 1 } = params;
+    const { propertyType, standardPrice, region, bondDiscountRate, buyerCount = 1, buyerShares = [] } = params;
 
     // 시가표준액이 없으면 채권 계산 건너뜀
     if (!standardPrice || standardPrice === 0) {
@@ -412,23 +412,38 @@ function calculateBond(params) {
 
     const rates = bondRates[typeKey] || bondRates.commercial;
 
-    // 공동명의: 시가표준액을 매수인 수로 나눠서 각각 계산
-    const pricePerBuyer = standardPrice / buyerCount;
-
-    // 1인당 시가표준액에 해당하는 매입률 찾기
-    let bondRate = 0;
-    for (const bracket of rates) {
-        if (pricePerBuyer >= bracket.min && pricePerBuyer < bracket.max) {
-            bondRate = bracket.rate;
-            break;
+    // 지분별 채권 계산 함수
+    function bondForPrice(price) {
+        let rate = 0;
+        for (const bracket of rates) {
+            if (price >= bracket.min && price < bracket.max) {
+                rate = bracket.rate;
+                break;
+            }
         }
+        return { amount: roundToTenThousand(price * rate), rate };
     }
 
-    // 1인당 채권매입액 계산 (만원 단위 반올림)
-    const bondAmountPerBuyer = roundToTenThousand(pricePerBuyer * bondRate);
+    let bondAmount = 0;
+    let bondRate = 0;
 
-    // 총 채권매입액 (1인당 × 매수인 수)
-    const bondAmount = bondAmountPerBuyer * buyerCount;
+    if (buyerCount >= 2 && buyerShares.length === buyerCount) {
+        // 각 매수인 지분에 따라 과세표준 분할 후 개별 계산
+        for (const share of buyerShares) {
+            const ratio = share.denominator > 0 ? share.numerator / share.denominator : 1 / buyerCount;
+            const priceForBuyer = standardPrice * ratio;
+            const result = bondForPrice(priceForBuyer);
+            bondAmount += result.amount;
+        }
+        // 표시용 대표 요율 (1인 기준)
+        bondRate = bondForPrice(standardPrice * (buyerShares[0].denominator > 0 ? buyerShares[0].numerator / buyerShares[0].denominator : 1 / buyerCount)).rate;
+    } else {
+        // 1인 또는 지분 미입력: 균등 분할
+        const pricePerBuyer = standardPrice / buyerCount;
+        const result = bondForPrice(pricePerBuyer);
+        bondAmount = result.amount * buyerCount;
+        bondRate = result.rate;
+    }
 
     // 할인매도시 실제 부담액
     const discountRate = bondDiscountRate / 100;
@@ -440,9 +455,7 @@ function calculateBond(params) {
         bondRatePercent: (bondRate * 100).toFixed(2),
         discountAmount: actualCost,
         discountRate: bondDiscountRate,
-        buyerCount: buyerCount,
-        pricePerBuyer: pricePerBuyer,
-        bondAmountPerBuyer: bondAmountPerBuyer
+        buyerCount: buyerCount
     };
 }
 
@@ -647,8 +660,8 @@ function calculateTotal(params) {
         lawyerFeeResult = calculateLawyerFeeBubtong(params.salePrice);
     }
 
-    // 플랫폼별 고정 비용
-    const registrationFee = config.registrationFee;
+    // 플랫폼별 고정 비용 (다대사건이면 증지대 2배)
+    const registrationFee = config.registrationFee * (params.isDadae ? 2 : 1);
     const transportFee = params.transportFee || config.transportFee;
 
     // 일반 플랫폼 추가 비용
@@ -868,6 +881,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const buyerCountInput = document.getElementById('buyerCount');
         const buyerCount = parseInt(buyerCountInput.value) || 1;
 
+        // 공동명의 지분 수집
+        const buyerShares = [];
+        if (buyerCount >= 2) {
+            for (let i = 0; i < buyerCount; i++) {
+                const numEl = document.getElementById(`buyerShare_num_${i}`);
+                const denEl = document.getElementById(`buyerShare_den_${i}`);
+                const numerator = numEl ? (parseInt(numEl.value) || 1) : 1;
+                const denominator = denEl ? (parseInt(denEl.value) || buyerCount) : buyerCount;
+                buyerShares.push({ numerator, denominator });
+            }
+        }
+
         const lawyerDiscountRadio = document.querySelector('input[name="lawyerDiscount"]:checked');
         const lawyerDiscount = lawyerDiscountRadio ? parseInt(lawyerDiscountRadio.value) : 0;
 
@@ -885,7 +910,9 @@ document.addEventListener('DOMContentLoaded', function() {
             landType: landTypeRadio ? landTypeRadio.value : 'general',
             bondDiscountRate: bondDiscountRate,
             transportFee: transportFee,
-            buyerCount: buyerCount
+            buyerCount: buyerCount,
+            buyerShares: buyerShares,
+            isDadae: document.getElementById('dadaeCheckbox') ? document.getElementById('dadaeCheckbox').checked : false
         };
 
         // 계산 실행
@@ -1165,6 +1192,43 @@ document.addEventListener('DOMContentLoaded', function() {
             win.focus();
             setTimeout(() => { win.print(); }, 500);
         });
+    }
+
+    // 매수인 수 변경 시 지분 입력 UI 갱신
+    const buyerCountInputEl = document.getElementById('buyerCount');
+    const buyerSharesContainer = document.getElementById('buyerSharesContainer');
+    const buyerSharesList = document.getElementById('buyerSharesList');
+
+    function renderBuyerShares(count) {
+        if (!buyerSharesContainer || !buyerSharesList) return;
+        if (count < 2) {
+            buyerSharesContainer.style.display = 'none';
+            buyerSharesList.innerHTML = '';
+            return;
+        }
+        buyerSharesContainer.style.display = 'block';
+        buyerSharesList.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex; align-items:center; gap:8px; margin-bottom:8px;';
+            row.innerHTML = `
+                <span style="font-size:14px; color:var(--text-primary); min-width:60px;">매수인${i + 1}</span>
+                <input type="number" id="buyerShare_num_${i}" value="1" min="1"
+                    style="width:60px; text-align:center; border:1px solid #c8b89a; border-radius:6px; padding:5px; font-size:14px;">
+                <span style="font-size:16px; color:var(--text-secondary);">/</span>
+                <input type="number" id="buyerShare_den_${i}" value="${count}" min="1"
+                    style="width:60px; text-align:center; border:1px solid #c8b89a; border-radius:6px; padding:5px; font-size:14px;">
+            `;
+            buyerSharesList.appendChild(row);
+        }
+    }
+
+    if (buyerCountInputEl) {
+        buyerCountInputEl.addEventListener('change', function() {
+            renderBuyerShares(parseInt(this.value) || 1);
+        });
+        // 초기 렌더
+        renderBuyerShares(parseInt(buyerCountInputEl.value) || 1);
     }
 
     // 일당 및 교통비 입력 포맷팅

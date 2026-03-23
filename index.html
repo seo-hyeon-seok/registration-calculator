@@ -34,6 +34,14 @@
                         <span class="label">법무통</span>
                     </button>
                 </div>
+                <!-- 다대사건 -->
+                <div class="option-group" style="margin-top: 16px;">
+                    <label class="checkbox-label" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="dadaeCheckbox" style="width:18px; height:18px; accent-color:var(--accent-color); cursor:pointer;">
+                        <span style="font-size:15px; color:var(--text-primary);">다대사건 <span style="font-size:13px; color:var(--text-secondary);">(매도인 또는 매수인 2명 이상 — 증지대 2배)</span></span>
+                    </label>
+                </div>
+
                 <!-- 일반 플랫폼 법무사 비용 할인율 -->
                 <div class="option-group lawyer-discount-group" id="lawyerDiscountGroup" style="margin-top: 20px;">
                     <label>법무사 비용 할인율</label>
@@ -217,6 +225,12 @@
                     <p class="helper-text">
                         * 공동명의 시 인원수만큼 채권매입률이 각각 적용됩니다.
                     </p>
+                </div>
+
+                <!-- 매수인별 지분 입력 (공동명의 2인 이상 시 표시) -->
+                <div id="buyerSharesContainer" style="display:none;">
+                    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">* 각 매수인의 지분을 분수로 입력하세요.</p>
+                    <div id="buyerSharesList"></div>
                 </div>
 
                 <div class="form-group">

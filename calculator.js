@@ -1218,20 +1218,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         buyerSharesContainer.style.display = 'block';
         buyerSharesList.innerHTML = '';
+        buyerSharesList.style.cssText = 'display:flex; align-items:center; gap:16px; flex-wrap:wrap;';
         const equalShare = Math.round((100 / count) * 10) / 10;
         for (let i = 0; i < count; i++) {
             const isLast = i === count - 1;
             const defaultVal = isLast ? Math.round((100 - equalShare * (count - 1)) * 10) / 10 : equalShare;
-            const row = document.createElement('div');
-            row.style.cssText = 'display:flex; align-items:center; gap:8px; margin-bottom:8px;';
-            row.innerHTML = `
-                <span style="font-size:14px; color:var(--text-primary); min-width:60px;">매수인${i + 1}</span>
+            const cell = document.createElement('div');
+            cell.style.cssText = 'display:flex; align-items:center; gap:6px;';
+            cell.innerHTML = `
+                <span style="font-size:14px; color:var(--text-primary); white-space:nowrap;">매수인${i + 1}</span>
                 <input type="number" id="buyerShare_pct_${i}" value="${defaultVal}" min="0" max="100" step="0.1"
                     ${isLast ? 'readonly' : ''}
-                    style="width:75px; text-align:center; border:1px solid #c8b89a; border-radius:6px; padding:5px; font-size:14px;${isLast ? ' background:#f0ebe2; color:var(--text-secondary);' : ''}">
+                    style="width:70px; text-align:center; border:1px solid #c8b89a; border-radius:6px; padding:5px; font-size:14px;${isLast ? ' background:#f0ebe2; color:var(--text-secondary);' : ''}">
                 <span style="font-size:14px; color:var(--text-secondary);">%</span>
             `;
-            buyerSharesList.appendChild(row);
+            buyerSharesList.appendChild(cell);
         }
         // 앞 매수인 입력 시 마지막 자동 갱신
         for (let i = 0; i < count - 1; i++) {

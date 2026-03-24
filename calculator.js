@@ -1002,6 +1002,70 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('summaryTax').textContent = formatNumber(result.acquisition.total) + '원';
         document.getElementById('summaryBond').textContent = formatNumber(result.bond.discountAmount) + '원';
         document.getElementById('summaryOther').textContent = formatNumber(result.otherTotal) + '원';
+
+        // 항목 토글 체크박스 전체 초기화 (계산 시 모두 체크)
+        ['includeTransport', 'includeBondService', 'includeTaxReport', 'includeSubmission', 'includeCert'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.checked = true;
+        });
+        ['transportFeeRow', 'bondServiceFeeRow', 'taxReportFeeRow', 'submissionFeeRow', 'certFeeRow'].forEach(rowId => {
+            const row = document.getElementById(rowId);
+            if (row) row.classList.remove('row-disabled');
+        });
+    }
+
+    // 비용 항목 토글 체크박스 이벤트
+    ['includeTransport', 'includeBondService', 'includeTaxReport', 'includeSubmission', 'includeCert'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', updateFeeToggles);
+    });
+
+    // 토글 상태를 반영한 유효 결과 반환
+    function getEffectiveResult() {
+        if (!lastResult) return null;
+        const r = lastResult;
+        const chk = id => {
+            const el = document.getElementById(id);
+            return !el || el.checked;
+        };
+        const transportFee    = chk('includeTransport')   ? r.transportFee    : 0;
+        const bondServiceFee  = chk('includeBondService') ? r.bondServiceFee  : 0;
+        const taxReportFee    = chk('includeTaxReport')   ? r.taxReportFee    : 0;
+        const submissionFee   = chk('includeSubmission')  ? r.submissionFee   : 0;
+        const certFee         = chk('includeCert')        ? r.certFee         : 0;
+        const otherTotal = r.stampTax + r.registrationFee + r.lawyerTotal +
+                           transportFee + bondServiceFee + taxReportFee + submissionFee + certFee;
+        const grandTotal = r.acquisition.total + r.bond.discountAmount + otherTotal;
+        return { ...r, transportFee, bondServiceFee, taxReportFee, submissionFee, certFee, otherTotal, grandTotal };
+    }
+
+    // 토글 변경 시 화면 합계 갱신
+    function updateFeeToggles() {
+        const r = getEffectiveResult();
+        if (!r) return;
+
+        // 행 비활성화 스타일 및 금액 표시
+        const rowMap = {
+            'transportFeeRow':  { id: 'includeTransport',   amtId: 'transportFeeResult', val: r.transportFee },
+            'bondServiceFeeRow':{ id: 'includeBondService', amtId: 'bondServiceFee',      val: r.bondServiceFee },
+            'taxReportFeeRow':  { id: 'includeTaxReport',   amtId: 'taxReportFee',        val: r.taxReportFee },
+            'submissionFeeRow': { id: 'includeSubmission',  amtId: 'submissionFee',       val: r.submissionFee },
+            'certFeeRow':       { id: 'includeCert',        amtId: 'certFee',             val: r.certFee },
+        };
+        Object.entries(rowMap).forEach(([rowId, cfg]) => {
+            const row = document.getElementById(rowId);
+            const chkEl = document.getElementById(cfg.id);
+            if (!row || !chkEl) return;
+            const checked = chkEl.checked;
+            row.classList.toggle('row-disabled', !checked);
+            const amtEl = document.getElementById(cfg.amtId);
+            if (amtEl) amtEl.textContent = formatNumber(cfg.val) + '원';
+        });
+
+        // 합계 갱신
+        document.getElementById('otherTotal').textContent  = formatNumber(r.otherTotal) + '원';
+        document.getElementById('grandTotal').textContent  = formatNumber(r.grandTotal) + '원';
+        document.getElementById('summaryOther').textContent = formatNumber(r.otherTotal) + '원';
     }
 
     // 복사 버튼 이벤트
@@ -1076,7 +1140,7 @@ document.addEventListener('DOMContentLoaded', function() {
         printReceiptBtn.addEventListener('click', function() {
             if (!lastResult) return;
 
-            const r = lastResult;
+            const r = getEffectiveResult();
             const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
             const address = document.getElementById('address').value || '-';
             const caseName = document.getElementById('caseName').value || '소유권이전';

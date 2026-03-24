@@ -691,6 +691,31 @@ header:hover .header-particles span {
     min-width: auto;
 }
 
+/* 항목 토글 체크박스 */
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+.toggle-label input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent-color);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* 비활성화된 항목 */
+.result-row.row-disabled {
+    opacity: 0.35;
+}
+.result-row.row-disabled span:last-child {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
 /* 할인 표시 스타일 */
 .result-row.discount-row {
     background: rgba(220, 53, 69, 0.08);

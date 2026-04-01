@@ -747,7 +747,7 @@ header:hover .header-particles span {
 .fee-input:focus {
     background: rgba(139, 115, 85, 0.25);
     border-color: #c4a882;
-    color: #f5f0e8;
+    color: #2c2416;
     box-shadow: 0 0 0 2px rgba(139, 115, 85, 0.3);
 }
 

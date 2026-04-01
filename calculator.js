@@ -1161,6 +1161,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
             const address = document.getElementById('address').value || '-';
             const caseName = document.getElementById('caseName').value || '소유권이전';
+            const clientName = document.getElementById('clientName').value || '-';
             const standardPriceVal = parseInputNumber(document.getElementById('standardPrice').value);
             const taxDiscountRadio = document.querySelector('input[name="taxDiscount"]:checked');
             const discountLimitNotice = (taxDiscountRadio && taxDiscountRadio.value !== 'none' && r.salePrice > 1200000000)
@@ -1219,11 +1220,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <table class="info-table">
     <tr>
+      <td class="label">고객명</td><td>${clientName}</td>
       <td class="label">사건명</td><td>${caseName}</td>
-      <td class="label">매매대금</td><td><strong>${formatNumber(r.salePrice)}원</strong></td>
     </tr>
     <tr>
-      <td class="label">과세표준액</td><td colspan="3">${standardPriceVal > 0 ? formatNumber(standardPriceVal) + '원' : '-'}</td>
+      <td class="label">매매대금</td><td><strong>${formatNumber(r.salePrice)}원</strong></td>
+      <td class="label">과세표준액</td><td>${standardPriceVal > 0 ? formatNumber(standardPriceVal) + '원' : '-'}</td>
     </tr>
     <tr>
       <td class="label">주소</td><td colspan="3">${address}</td>

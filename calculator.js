@@ -719,6 +719,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const platformBtns = document.querySelectorAll('.platform-btn');
     const lawyerDiscountGroup = document.getElementById('lawyerDiscountGroup');
 
+    // 플랫폼 레이블 매핑
+    const PLATFORM_LABEL = { general: '일반', master: '등기마스터', bubtong: '법무통' };
+
+    // 사건명에 플랫폼 접미사 반영 (기존 접미사 제거 후 재부착)
+    function updateCaseNamePlatform(platform) {
+        const caseNameInput = document.getElementById('caseName');
+        if (!caseNameInput) return;
+        // 기존 " (xxx)" 접미사 제거
+        const base = caseNameInput.value.replace(/\s*\([^)]*\)$/, '').trim();
+        caseNameInput.value = base + ' (' + PLATFORM_LABEL[platform] + ')';
+    }
+
+    // 초기 사건명에 기본 플랫폼(일반) 반영
+    updateCaseNamePlatform(currentPlatform);
+
     platformBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             platformBtns.forEach(b => b.classList.remove('active'));
@@ -743,6 +758,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 lawyerDiscountGroup.style.display = currentPlatform === 'general' ? 'block' : 'none';
             }
 
+            // 사건명 플랫폼 접미사 업데이트
+            updateCaseNamePlatform(currentPlatform);
         });
     });
 

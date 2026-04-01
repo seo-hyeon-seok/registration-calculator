@@ -984,20 +984,16 @@ document.addEventListener('DOMContentLoaded', function() {
             lawyerFeeLabel.textContent = '보수료';
         }
 
-        // 할인 적용 시 원래 금액 표시, 아니면 할인된 금액 표시
+        // 보수료·부가가치세 editable input 에 계산값 설정
+        document.getElementById('lawyerFeeInput').value = formatNumber(result.lawyerFee);
+        document.getElementById('lawyerVatInput').value = formatNumber(result.lawyerVat);
         if (result.lawyerDiscountRate > 0) {
-            document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerOriginalFee) + '원';
             document.getElementById('lawyerDiscountRow').style.display = 'flex';
             document.getElementById('lawyerDiscountLabel').textContent = '할인 -' + result.lawyerDiscountRate + '%';
             document.getElementById('lawyerDiscountAmount').textContent = '-' + formatNumber(result.lawyerDiscountAmount) + '원';
-            document.getElementById('lawyerDiscountedFeeRow').style.display = 'flex';
-            document.getElementById('lawyerDiscountedFee').textContent = formatNumber(result.lawyerFee) + '원';
         } else {
-            document.getElementById('lawyerFee').textContent = formatNumber(result.lawyerFee) + '원';
             document.getElementById('lawyerDiscountRow').style.display = 'none';
-            document.getElementById('lawyerDiscountedFeeRow').style.display = 'none';
         }
-        document.getElementById('lawyerVat').textContent = formatNumber(result.lawyerVat) + '원';
         document.getElementById('otherTotal').textContent = formatNumber(result.otherTotal) + '원';
 
         // 일반 플랫폼 추가 비용 표시/숨김
@@ -1050,10 +1046,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const taxReportFee    = chk('includeTaxReport')   ? r.taxReportFee    : 0;
         const submissionFee   = chk('includeSubmission')  ? r.submissionFee   : 0;
         const certFee         = chk('includeCert')        ? r.certFee         : 0;
-        const otherTotal = r.stampTax + r.registrationFee + r.lawyerTotal +
+        // 보수료·부가가치세는 사용자가 직접 수정한 값 우선 사용
+        const lawyerFee       = parseInputNumber(document.getElementById('lawyerFeeInput')?.value || '0');
+        const lawyerVat       = parseInputNumber(document.getElementById('lawyerVatInput')?.value || '0');
+        const lawyerTotal     = lawyerFee + lawyerVat;
+        const otherTotal = r.stampTax + r.registrationFee + lawyerTotal +
                            transportFee + bondServiceFee + taxReportFee + submissionFee + certFee;
         const grandTotal = r.acquisition.total + r.bond.discountAmount + otherTotal;
-        return { ...r, transportFee, bondServiceFee, taxReportFee, submissionFee, certFee, otherTotal, grandTotal };
+        return { ...r, lawyerFee, lawyerVat, lawyerTotal, transportFee, bondServiceFee, taxReportFee, submissionFee, certFee, otherTotal, grandTotal };
     }
 
     // 토글 변경 시 화면 합계 갱신
@@ -1085,6 +1085,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('summaryOther').textContent = formatNumber(r.otherTotal) + '원';
     }
 
+    // 보수료·부가가치세 직접 수정 시 합계 갱신
+    ['lawyerFeeInput', 'lawyerVatInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateFeeToggles);
+    });
+
     // 복사 버튼 이벤트
     const copyAllBtn = document.getElementById('copyAllBtn');
     const copyForMasterBtn = document.getElementById('copyForMasterBtn');
@@ -1106,8 +1112,8 @@ document.addEventListener('DOMContentLoaded', function() {
 인지대: ${formatNumber(lastResult.stampTax)}원
 증지대: ${formatNumber(lastResult.registrationFee)}원
 일당 및 교통비: ${formatNumber(lastResult.transportFee)}원
-보수료: ${formatNumber(lastResult.lawyerFee)}원
-부가가치세: ${formatNumber(lastResult.lawyerVat)}원
+보수료: ${formatNumber(parseInputNumber(document.getElementById('lawyerFeeInput').value))}원
+부가가치세: ${formatNumber(parseInputNumber(document.getElementById('lawyerVatInput').value))}원
 
 총 등기비용: ${formatNumber(lastResult.grandTotal)}원`;
 
@@ -1134,8 +1140,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 lastResult.acquisition.ruralTax,
                 lastResult.stampTax,
                 lastResult.registrationFee,
-                lastResult.lawyerFee,
-                lastResult.lawyerVat
+                parseInputNumber(document.getElementById('lawyerFeeInput').value),
+                parseInputNumber(document.getElementById('lawyerVatInput').value)
             ];
 
             const text = values.join('\t');

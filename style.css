@@ -716,6 +716,34 @@ header:hover .header-particles span {
     color: var(--text-muted);
 }
 
+/* 보수료·부가가치세 직접 수정 입력 */
+.editable-fee-wrap {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.fee-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--accent-color);
+    outline: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-primary);
+    text-align: right;
+    width: 90px;
+    padding: 0 2px;
+    font-variant-numeric: tabular-nums;
+}
+.fee-input:focus {
+    border-bottom-color: var(--accent-light);
+    background: rgba(139, 115, 85, 0.06);
+    border-radius: 3px 3px 0 0;
+}
+
 /* 할인 표시 스타일 */
 .result-row.discount-row {
     background: rgba(220, 53, 69, 0.08);

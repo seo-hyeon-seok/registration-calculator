@@ -720,28 +720,35 @@ header:hover .header-particles span {
 .editable-fee-wrap {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
     font-weight: 500;
     color: var(--text-primary);
 }
 .fee-input {
-    background: transparent;
-    border: none;
-    border-bottom: 1px dashed var(--accent-color);
+    background: rgba(139, 115, 85, 0.12);
+    border: 1px solid var(--accent-color);
+    border-radius: 5px;
     outline: none;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
     font-family: inherit;
-    color: var(--text-primary);
+    color: var(--accent-light);
     text-align: right;
-    width: 90px;
-    padding: 0 2px;
+    width: 95px;
+    padding: 3px 6px;
     font-variant-numeric: tabular-nums;
+    cursor: text;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.fee-input:hover {
+    background: rgba(139, 115, 85, 0.2);
+    border-color: var(--accent-light);
 }
 .fee-input:focus {
-    border-bottom-color: var(--accent-light);
-    background: rgba(139, 115, 85, 0.06);
-    border-radius: 3px 3px 0 0;
+    background: rgba(139, 115, 85, 0.25);
+    border-color: #c4a882;
+    color: #f5f0e8;
+    box-shadow: 0 0 0 2px rgba(139, 115, 85, 0.3);
 }
 
 /* 할인 표시 스타일 */

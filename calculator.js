@@ -1188,7 +1188,8 @@ document.addEventListener('DOMContentLoaded', function() {
   h1 { text-align:center; font-size:23px; letter-spacing:2px; color:#3d3229; padding-bottom:3mm; border-bottom:2px solid #3d3229; margin-bottom:3mm; }
   .date { text-align:center; font-size:12px; color:#8b7355; margin-bottom:3mm; }
   table { width:100%; border-collapse:collapse; margin-bottom:3mm; }
-  .info-table td { padding:3px 6px; font-size:13px; }
+  .info-table { border:1px solid #d0c4b0; }
+  .info-table td { padding:3px 6px; font-size:13px; border:1px solid #d0c4b0; }
   .info-table td.label { background:#f5f0e8; color:#6b5d4d; font-weight:600; width:18%; text-align:center; }
   .section-title { background:#3d3229; color:#fff; padding:7px 8px; font-size:13px; font-weight:600; border-radius:3px 3px 0 0; margin-bottom:0; }
   .detail-table { border:1px solid #e0d6c8; border-top:none; }

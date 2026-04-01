@@ -531,9 +531,12 @@ const BUBTONG_FEE_TABLE = [
     [665000000,  260000],
     [685000000,  270000],
     [730000000,  280000],
+	[820000000,  304000],
+	[880000000,  320000],
     [900000000,  330000],
+	[940000000,  337000],
     [1020000000, 360000],
-    [1047000000, 370000],
+    [1047000000, 367000],
     [1100000000, 380000],
     [1150000000, 385000],
     [1250000000, 405000],
@@ -1184,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family: 'Pretendard', -apple-system, sans-serif; color: #2c2416; background: #fff; margin: 0; padding: 15mm 0 8mm; font-size: 13px; line-height: 1.5; }
-  .page { max-width: 155mm; margin: 0 auto; }
+  .page { max-width: 130mm; margin: 0 auto; }
   h1 { text-align:center; font-size:23px; letter-spacing:2px; color:#3d3229; padding-bottom:3mm; border-bottom:2px solid #3d3229; margin-bottom:3mm; }
   .date { text-align:center; font-size:12px; color:#8b7355; margin-bottom:3mm; }
   table { width:100%; border-collapse:collapse; margin-bottom:3mm; }

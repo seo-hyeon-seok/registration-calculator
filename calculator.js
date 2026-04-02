@@ -138,18 +138,14 @@ const PLATFORM_CONFIG = {
     }
 };
 
-// 등기마스터 매매가 구간별 기본 보수료 (부가세 포함)
-// 5천원 단위로 조정 가능
+// 등기마스터 매매가 구간별 기본 보수료
+// vatIncluded: true → fee가 부가세 포함 금액, false → fee가 부가세 별도 금액
 const MASTER_FEE_TIERS = [
-    { max:  300000000, fee: 210000 },  // ~3억
-    { max:  500000000, fee: 250000 },  // ~5억
-    { max:  700000000, fee: 280000 },  // ~7억
-    { max:  900000000, fee: 330000 },  // ~9억
-    { max: 1100000000, fee: 380000 },  // ~11억
-    { max: 1300000000, fee: 420000 },  // ~13억
-    { max: 1800000000, fee: 510000 },  // ~18억
-    { max: 2400000000, fee: 550000 },  // ~24억
-    { max: 3000000000, fee: 610000 },  // ~30억
+    { max:  600000000, fee: 250000, vatIncluded: true  },  // ~6억  (부가세 포함)
+    { max: 1000000000, fee: 270000, vatIncluded: false },  // ~10억 (부가세 별도)
+    { max: 1500000000, fee: 290000, vatIncluded: false },  // ~15억 (부가세 별도)
+    { max: 2000000000, fee: 320000, vatIncluded: false },  // ~20억 (부가세 별도)
+    { max: Infinity,   fee: 350000, vatIncluded: false },  // 20억~ (부가세 별도)
 ];
 
 // 등기마스터 지역별 가산금 (부가세 포함, 철산동 기준 거리)
@@ -587,36 +583,23 @@ function calculateLawyerFeeBubtong(salePrice) {
 }
 
 /**
- * 법무사 수수료 계산 (등기마스터용 - 법무통 동일 방식 × 10% 할인)
+ * 법무사 수수료 계산 (등기마스터용 - 구간별 고정 보수료)
  */
 function calculateLawyerFeeMaster(_masterRegion, salePrice) {
-    // 법무통과 동일한 보간 테이블 사용
-    const table = BUBTONG_FEE_TABLE;
-    let fee;
-
-    if (salePrice <= table[0][0]) {
-        fee = table[0][1];
-    } else if (salePrice >= table[table.length - 1][0]) {
-        const [p1, f1] = table[table.length - 2];
-        const [p2, f2] = table[table.length - 1];
-        const rate = (f2 - f1) / (p2 - p1);
-        fee = Math.round(f2 + rate * (salePrice - p2));
+    // 구간별 고정 보수료
+    const tier = MASTER_FEE_TIERS.find(t => salePrice <= t.max) ?? MASTER_FEE_TIERS[MASTER_FEE_TIERS.length - 1];
+    let baseFee, vat, total;
+    if (tier.vatIncluded) {
+        // 부가세 포함 금액 → 역산
+        total = tier.fee;
+        baseFee = Math.round(total / 1.1);
+        vat = total - baseFee;
     } else {
-        for (let i = 0; i < table.length - 1; i++) {
-            const [p1, f1] = table[i];
-            const [p2, f2] = table[i + 1];
-            if (salePrice <= p2) {
-                const ratio = (salePrice - p1) / (p2 - p1);
-                fee = Math.round(f1 + ratio * (f2 - f1));
-                break;
-            }
-        }
+        // 부가세 별도 금액 → 10% 추가
+        baseFee = tier.fee;
+        vat = Math.round(baseFee * 0.1);
+        total = baseFee + vat;
     }
-
-    // 10% 할인 적용 (부가세 포함 금액 기준, 1000원 단위 반올림)
-    const total = Math.round(fee * 0.9 / 1000) * 1000;
-    const baseFee = Math.round(total / 1.1);
-    const vat = total - baseFee;
 
     return {
         baseFee,      // 보수료 (부가세 제외)

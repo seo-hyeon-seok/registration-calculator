@@ -141,11 +141,16 @@ const PLATFORM_CONFIG = {
 // 등기마스터 매매가 구간별 기본 보수료
 // vatIncluded: true → fee가 부가세 포함 금액, false → fee가 부가세 별도 금액
 const MASTER_FEE_TIERS = [
-    { max:  600000000, fee: 250000, vatIncluded: true  },  // ~6억  (부가세 포함)
-    { max: 1000000000, fee: 270000, vatIncluded: false },  // ~10억 (부가세 별도)
-    { max: 1500000000, fee: 290000, vatIncluded: false },  // ~15억 (부가세 별도)
-    { max: 2000000000, fee: 320000, vatIncluded: false },  // ~20억 (부가세 별도)
-    { max: Infinity,   fee: 350000, vatIncluded: false },  // 20억~ (부가세 별도)
+    { max:  600000000, fee: 250000, vatIncluded: true },  // ~6억   (부가세 포함)
+    { max:  800000000, fee: 265000, vatIncluded: true },  // ~8억   (부가세 포함)
+    { max: 1000000000, fee: 280000, vatIncluded: true },  // ~10억  (부가세 포함)
+    { max: 1300000000, fee: 295000, vatIncluded: true },  // ~13억  (부가세 포함)
+    { max: 1600000000, fee: 310000, vatIncluded: true },  // ~16억  (부가세 포함)
+    { max: 1800000000, fee: 330000, vatIncluded: true },  // ~18억  (부가세 포함)
+    { max: 2000000000, fee: 350000, vatIncluded: true },  // ~20억  (부가세 포함)
+    { max: 2500000000, fee: 370000, vatIncluded: true },  // ~25억  (부가세 포함)
+    { max: 3000000000, fee: 390000, vatIncluded: true },  // ~30억  (부가세 포함)
+    { max: Infinity,   fee: 410000, vatIncluded: true },  // 30억~  (부가세 포함)
 ];
 
 // 등기마스터 지역별 가산금 (부가세 포함, 철산동 기준 거리)

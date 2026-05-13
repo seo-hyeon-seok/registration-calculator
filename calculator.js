@@ -372,6 +372,10 @@ function calculateAcquisitionTax(params) {
             acquisitionTax = Math.max(0, acquisitionTax - 5000000);
             educationTax = Math.max(0, educationTax - 500000);
         }
+        // 농특세: 감면세액의 20% 추가 부과 (농어촌특별세법 제5조)
+        if (acquisitionDiscount > 0) {
+            ruralTax += acquisitionDiscount * 0.2;
+        }
     }
 
     return {

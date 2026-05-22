@@ -349,9 +349,6 @@ function calculateAcquisitionTax(params) {
         educationTax = salePrice * 0.004;
     }
 
-    // 농어촌특별세
-    let ruralTax = salePrice * ruralTaxRate;
-
     // 감면 적용 (주택 1주택자만, 매매대금 12억 이하만 해당)
     let acquisitionDiscount = 0;
     let educationDiscount = 0;
@@ -372,10 +369,18 @@ function calculateAcquisitionTax(params) {
             acquisitionTax = Math.max(0, acquisitionTax - 5000000);
             educationTax = Math.max(0, educationTax - 500000);
         }
-        // 농특세: 감면세액의 20% 추가 부과 (농어촌특별세법 제5조)
-        // 85㎡ 이하는 농특세 비과세이므로 제외
+    }
+
+    // 농어촌특별세 (엑셀 공식: =IF(AC21, IF(감면없음, ROUNDDOWN(Y7*0.02*0.1,-1), ROUNDDOWN(H12*(2/V16/100)*0.1,-1)+감면세액*0.2), ""))
+    let ruralTax = 0;
+    if (ruralTaxRate > 0) {
         if (acquisitionDiscount > 0 && !isUnder85sqm) {
-            ruralTax += acquisitionDiscount * 0.2;
+            // 감면 + 85㎡ 초과: 감면 후 취득세(H12) 기준 농특세 + 감면세액의 20%
+            const baseRuralTax = Math.floor(acquisitionTax * 0.002 / taxRate / 10) * 10;
+            ruralTax = baseRuralTax + acquisitionDiscount * 0.2;
+        } else {
+            // 일반: ROUNDDOWN(매매대금 × 0.2%, -1)
+            ruralTax = Math.floor(salePrice * ruralTaxRate / 10) * 10;
         }
     }
 

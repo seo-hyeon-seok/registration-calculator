@@ -1,10 +1,15 @@
 # 클립보드의 법무통 견적요청 카드 스크린샷을 Gemini로 분석해 등기비용 계산기 웹페이지를 자동 채움 URL로 엽니다
+import hashlib
 import json
 import re
+import time
 import webbrowser
 from urllib.parse import urlencode
 
 from PIL import ImageGrab
+
+CLIPBOARD_WAIT_TIMEOUT_SEC = 120
+CLIPBOARD_POLL_INTERVAL_SEC = 1
 
 GEMINI_API_KEY_FILE = r"D:\reo\Works\이전_매매\기본파일\gemini_api_key.txt"
 CALCULATOR_URL = "https://seo-hyeon-seok.github.io/registration-calculator/"
@@ -19,7 +24,7 @@ PROMPT = """법무통 사이트의 "견적요청" 카드 이미지입니다. 카
   "sale_price": "거래금액 숫자만 (원 단위, 콤마·원 제거)",
   "tax_rate_percent": "취득세율 숫자만 (예: 1.69)",
   "address": "소재지상세 + 동/호수를 합친 전체 주소 (예: '경기도 부천시 원미구 도약로 36 (상동, 라일락마을) 2314동 803호')",
-  "under_85sqm": "전용면적란에 '85㎡ 이하'라고 적혀있으면 true, '85㎡ 초과'면 false",
+  "under_85sqm": "전용면적란에 '85㎡ 이하'라고 적혀있으면 true, '85㎡ 초과'면 false. 전용면적 항목 자체가 카드에 없으면(표시 안 됨, '-' 등) true",
   "tax_discount": "메모에 신생아 관련 감면 언급이 있으면 newborn, 생애최초만 언급되면 firstTime, 감면 언급이 없으면 none",
   "request_date": "요청일자 YYYY-MM-DD",
   "payment_date": "잔금예정일 YYYY-MM-DD",
@@ -34,11 +39,24 @@ def load_api_key():
         return f.read().strip()
 
 
-def get_clipboard_image():
-    img = ImageGrab.grabclipboard()
-    if img is None:
-        raise RuntimeError("클립보드에 이미지가 없습니다. 견적요청 카드를 캡쳐(Win+Shift+S)한 뒤 다시 실행하세요.")
-    return img
+def image_hash(img):
+    return hashlib.md5(img.tobytes()).hexdigest()
+
+
+def wait_for_new_clipboard_image():
+    baseline = ImageGrab.grabclipboard()
+    baseline_hash = image_hash(baseline) if baseline is not None else None
+
+    print(f"클립보드에 새 이미지가 복사되기를 기다리는 중... (Win+Shift+S로 견적요청 카드를 캡쳐하세요, 최대 {CLIPBOARD_WAIT_TIMEOUT_SEC}초)")
+    elapsed = 0
+    while elapsed < CLIPBOARD_WAIT_TIMEOUT_SEC:
+        img = ImageGrab.grabclipboard()
+        if img is not None and image_hash(img) != baseline_hash:
+            return img
+        time.sleep(CLIPBOARD_POLL_INTERVAL_SEC)
+        elapsed += CLIPBOARD_POLL_INTERVAL_SEC
+
+    raise RuntimeError(f"{CLIPBOARD_WAIT_TIMEOUT_SEC}초 동안 새 이미지가 감지되지 않았습니다. 다시 실행해주세요.")
 
 
 def analyze(img):
@@ -60,15 +78,14 @@ def build_url(data):
         'clientName': data.get('client_name', ''),
         'address': data.get('address', ''),
         'salePrice': str(data.get('sale_price', '')).replace(',', '').replace('원', '').strip(),
-        'under85': '1' if data.get('under_85sqm') else '0',
+        'under85': '0' if data.get('under_85sqm') is False else '1',
         'taxDiscount': data.get('tax_discount') or 'none',
     }
     return CALCULATOR_URL + '?' + urlencode(params)
 
 
 def main():
-    print("클립보드에서 이미지 확인 중...")
-    img = get_clipboard_image()
+    img = wait_for_new_clipboard_image()
 
     print("Gemini 분석 중...")
     data = analyze(img)

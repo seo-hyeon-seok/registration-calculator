@@ -571,15 +571,15 @@ function calculateLawyerFeeBubtong(salePrice) {
         const [p1, f1] = table[table.length - 2];
         const [p2, f2] = table[table.length - 1];
         const rate = (f2 - f1) / (p2 - p1);
-        fee = Math.round(f2 + rate * (salePrice - p2));
+        fee = Math.round((f2 + rate * (salePrice - p2)) / 1000) * 1000;
     } else {
-        // 구간 내: 선형 보간
+        // 구간 내: 선형 보간 (1,000원 단위로 반올림)
         for (let i = 0; i < table.length - 1; i++) {
             const [p1, f1] = table[i];
             const [p2, f2] = table[i + 1];
             if (salePrice <= p2) {
                 const ratio = (salePrice - p1) / (p2 - p1);
-                fee = Math.round(f1 + ratio * (f2 - f1));
+                fee = Math.round((f1 + ratio * (f2 - f1)) / 1000) * 1000;
                 break;
             }
         }

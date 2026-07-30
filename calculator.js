@@ -531,7 +531,7 @@ function calculateLawyerFeeGeneral(salePrice) {
 }
 
 /**
- * 법무통 보수료 구간 테이블 (부가세 포함 금액)
+ * 법무통 보수료 구간 테이블 (부가세 별도 금액, 2026-07-30 정책 변경)
  * 실제 케이스 기반 — 데이터 추가 시 항목 추가/수정
  * [매매대금(원), 보수료(원)]
  */
@@ -585,10 +585,10 @@ function calculateLawyerFeeBubtong(salePrice) {
         }
     }
 
-    // fee는 부가세 포함 금액 → 역산으로 분리
-    const total = fee;
-    const baseFee = Math.round(fee / 1.1);
-    const vat = total - baseFee;
+    // fee는 부가세 별도 금액(보수료) → 부가세 10% 추가 (2026-07-30 정책 변경)
+    const baseFee = fee;
+    const vat = Math.round(baseFee * 0.1);
+    const total = baseFee + vat;
 
     return {
         baseFee,      // 보수료 (부가세 제외)

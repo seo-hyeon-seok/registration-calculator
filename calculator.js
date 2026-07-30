@@ -1400,4 +1400,49 @@ function saveImage() {
             window.open('http://www.n6104.co.kr/index.asp', '_blank');
         });
     }
+
+    // URL 쿼리파라미터 자동채움 (법무통 견적요청 카드 OCR 연동용, ocr_autofill.py가 생성한 링크로 진입 시 동작)
+    function applyUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.has('salePrice')) return;
+
+        const bubtongBtn = document.querySelector('.platform-btn[data-platform="bubtong"]');
+        if (bubtongBtn) bubtongBtn.click();
+
+        const type = params.get('type');
+        if (type) {
+            const typeBtn = document.querySelector(`.property-type-btn[data-type="${type}"]`);
+            if (typeBtn) typeBtn.click();
+        }
+
+        const clientNameInput = document.getElementById('clientName');
+        if (clientNameInput && params.get('clientName')) {
+            clientNameInput.value = params.get('clientName');
+        }
+
+        if (addressInput && params.get('address')) {
+            addressInput.value = params.get('address');
+            addressInput.dispatchEvent(new Event('input'));
+        }
+
+        if (params.get('salePrice')) {
+            salePriceInput.value = params.get('salePrice');
+            salePriceInput.dispatchEvent(new Event('input'));
+        }
+
+        const taxDiscount = params.get('taxDiscount');
+        if (taxDiscount) {
+            const radio = document.querySelector(`input[name="taxDiscount"][value="${taxDiscount}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        if (params.has('under85')) {
+            const under85Checkbox = document.getElementById('under85sqm');
+            if (under85Checkbox) under85Checkbox.checked = params.get('under85') === '1';
+        }
+
+        calculateBtn.click();
+    }
+
+    applyUrlParams();
 });

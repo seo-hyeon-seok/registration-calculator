@@ -1095,6 +1095,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 복사 버튼 이벤트
     const copyAllBtn = document.getElementById('copyAllBtn');
     const copyForMasterBtn = document.getElementById('copyForMasterBtn');
+    const copyForBubtongBtn = document.getElementById('copyForBubtongBtn');
 
     if (copyAllBtn) {
         copyAllBtn.addEventListener('click', function() {
@@ -1153,6 +1154,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     copyForMasterBtn.textContent = '등기마스터용 복사';
                     copyForMasterBtn.classList.remove('copied');
+                }, 2000);
+            });
+        });
+    }
+
+    if (copyForBubtongBtn) {
+        copyForBubtongBtn.addEventListener('click', function() {
+            if (!lastResult) return;
+
+            // 법무통 견적서 제출폼 순서 (채권 항목은 제외): 취득세, 지방교육세, 농어촌특별세, 인지대, 증지대, 법무사비용, 부가세
+            const values = [
+                lastResult.acquisition.acquisitionTax,
+                lastResult.acquisition.educationTax,
+                lastResult.acquisition.ruralTax,
+                lastResult.stampTax,
+                lastResult.registrationFee,
+                parseInputNumber(document.getElementById('lawyerFeeInput').value),
+                parseInputNumber(document.getElementById('lawyerVatInput').value)
+            ];
+
+            const text = values.join('\t');
+
+            navigator.clipboard.writeText(text).then(() => {
+                copyForBubtongBtn.textContent = '복사 완료!';
+                copyForBubtongBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyForBubtongBtn.textContent = '법무통용 복사';
+                    copyForBubtongBtn.classList.remove('copied');
                 }, 2000);
             });
         });

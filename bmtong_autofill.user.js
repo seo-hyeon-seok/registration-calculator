@@ -17,9 +17,9 @@
     function setReactInputValue(input, value) {
         const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
         nativeSetter.call(input, value);
+        // 포커스를 주면 "부가세" 등 일부 칸이 자체적으로 값을 비우는 사이트 동작이 있어
+        // focus/blur는 호출하지 않고 input 이벤트만 전달함
         input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.focus();
-        input.blur();
     }
 
     function fillFromClipboard() {
@@ -51,9 +51,7 @@
             if (missing.length > 0) {
                 msg += `\n\n찾지 못한 항목: ${missing.join(', ')}`;
             }
-            // alert()가 즉시 뜨면 React가 마지막 입력값을 화면에 반영하기 전에
-            // 이벤트 루프가 멈춰서 마지막 필드가 비어보이는 문제가 있어 살짝 지연시킴
-            setTimeout(() => alert(msg), 150);
+            alert(msg);
         }).catch(err => {
             alert('클립보드를 읽지 못했습니다: ' + err.message);
         });

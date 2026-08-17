@@ -84,7 +84,7 @@ def build_url(data):
     return CALCULATOR_URL + '?' + urlencode(params)
 
 
-def main():
+def process_one():
     img = wait_for_new_clipboard_image()
 
     print("Gemini 분석 중...")
@@ -107,9 +107,20 @@ def main():
     webbrowser.open(url)
 
 
+def main():
+    print("법무통 견적요청 카드 자동 계산기 - 창을 닫거나 Ctrl+C를 누를 때까지 계속 실행됩니다.\n")
+    while True:
+        try:
+            process_one()
+        except RuntimeError as e:
+            print(f"[안내] {e}")
+        except Exception as e:
+            print(f"[오류] {e}")
+        print("\n다음 캡쳐를 기다리는 중...\n")
+
+
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
-        print(f"[오류] {e}")
-        input("엔터를 눌러 종료하세요...")
+    except KeyboardInterrupt:
+        print("\n종료합니다.")

@@ -564,11 +564,9 @@ function bubtongDiscountFactor(salePrice) {
     return 0;
 }
 
-// 올림 후 1의 자리가 1이면 1을 빼는 법무통 사이트의 보정 규칙
+// 1,000원 단위 올림 (사이트가 요구하는 최소 보수료 이상이 되도록 보수적으로 절상)
 function bubtongRoundUp(value) {
-    let rounded = Math.ceil(value);
-    if (rounded % 10 === 1) rounded -= 1;
-    return rounded;
+    return Math.ceil(value / 1000) * 1000;
 }
 
 /**

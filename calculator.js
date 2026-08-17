@@ -1470,4 +1470,15 @@ function saveImage() {
     }
 
     applyUrlParams();
+
+    // 오늘의 채권할인율 자동 채움 (GitHub Actions가 매일 갱신하는 bond_rate.json 사용)
+    fetch('./bond_rate.json')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+            if (data && data.rate) {
+                bondRateInput.value = data.rate;
+                bondRateInput.placeholder = `${data.date} 기준`;
+            }
+        })
+        .catch(() => {});
 });

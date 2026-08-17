@@ -64,7 +64,7 @@ def main():
     date_str, rate = result
     data = {
         "date": date_str,
-        "rate": rate,
+        "rate": round(rate, 2),
         "updatedAt": now.isoformat(),
     }
 

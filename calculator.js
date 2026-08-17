@@ -531,62 +531,60 @@ function calculateLawyerFeeGeneral(salePrice) {
 }
 
 /**
- * 법무통 보수료 구간 테이블 (부가세 별도 금액, 2026-07-30 정책 변경)
- * 실제 케이스 기반 — 데이터 추가 시 항목 추가/수정
- * [매매대금(원), 보수료(원)]
+ * 법무통 최소 보수료 산정 기준표 (부가세 별도 금액)
+ * 출처: bmtong.co.kr 프론트엔드 번들(PartnerEstimateDetail)의 최소 보수료 검증 로직을 그대로 이식
+ * [선택구간 하한, 선택구간 상한, 기준액, 차감기준값, 요율]
  */
-const BUBTONG_FEE_TABLE = [
-    [270000000,  210000],
-    [320000000,  250000],
-    [560000000,  250000],
-    [665000000,  260000],
-    [685000000,  270000],
-    [730000000,  280000],
-	[820000000,  304000],
-	[880000000,  320000],
-    [900000000,  330000],
-	[940000000,  337000],
-    [1020000000, 360000],
-    [1047000000, 367000],
-    [1100000000, 380000],
-    [1150000000, 385000],
-    [1250000000, 405000],
-    [1300000000, 415000],
-    [1770000000, 510000],
-    [2400000000, 550000],
+const BUBTONG_BASE_FEE_TABLE = [
+    [10000000,    60000000,    100000,   10000000,    0.0011],
+    [60000000,    110000000,   144000,   50000000,    0.0010],
+    [110000000,   300000000,   194000,   100000000,   0.0009],
+    [300000000,   510000000,   374000,   300000000,   0.0008],
+    [510000000,   1100000000,  534000,   500000000,   0.0007],
+    [1100000000,  2100000000,  884000,   1000000000,  0.0005],
+    [2100000000,  21000000000, 1384000,  2000000000,  0.0004],
+    [21000000000, Infinity,    8584000,  20000000000, 0.0001],
 ];
 
+// 표준 보수료(N) = 기준액 + (거래금액 - 차감기준값) × 요율
+function bubtongStandardFee(salePrice) {
+    const row = BUBTONG_BASE_FEE_TABLE.find(([low, high]) => salePrice >= low && salePrice < high);
+    if (!row) return 0;
+    const [, , base, ke, rate] = row;
+    return base + (salePrice - ke) * rate;
+}
+
+// 구간별 할인율(소수) 또는 고정 보수료(1보다 큰 정수)
+function bubtongDiscountFactor(salePrice) {
+    if (salePrice >= 10000000 && salePrice < 300000000) return 0.6;
+    if (salePrice >= 300000000 && salePrice < 640000000) return 250000;
+    if (salePrice >= 640000000 && salePrice < 2100000000) return 0.4;
+    if (salePrice >= 2100000000 && salePrice < 4000000000) return 550000;
+    if (salePrice >= 4000000000) return 0.3;
+    return 0;
+}
+
+// 올림 후 1의 자리가 1이면 1을 빼는 법무통 사이트의 보정 규칙
+function bubtongRoundUp(value) {
+    let rounded = Math.ceil(value);
+    if (rounded % 10 === 1) rounded -= 1;
+    return rounded;
+}
+
 /**
- * 법무사 수수료 계산 (법무통용 - 케이스 기반 보간 테이블)
+ * 법무사 수수료 계산 (법무통용 - 사이트 최소 보수료 산식 그대로 이식)
  */
 function calculateLawyerFeeBubtong(salePrice) {
-    const table = BUBTONG_FEE_TABLE;
-    let fee;
-
-    if (salePrice <= table[0][0]) {
-        // 최솟값 미만: 최소 보수료 고정
-        fee = table[0][1];
-    } else if (salePrice >= table[table.length - 1][0]) {
-        // 최댓값 초과: 마지막 구간 비율로 연장
-        const [p1, f1] = table[table.length - 2];
-        const [p2, f2] = table[table.length - 1];
-        const rate = (f2 - f1) / (p2 - p1);
-        fee = Math.round((f2 + rate * (salePrice - p2)) / 1000) * 1000;
+    let baseFee;
+    if (salePrice <= 10000000) {
+        // 거래금액 1천만원 이하: 최소 보수료 고정
+        baseFee = 70000;
     } else {
-        // 구간 내: 선형 보간 (1,000원 단위로 반올림)
-        for (let i = 0; i < table.length - 1; i++) {
-            const [p1, f1] = table[i];
-            const [p2, f2] = table[i + 1];
-            if (salePrice <= p2) {
-                const ratio = (salePrice - p1) / (p2 - p1);
-                fee = Math.round((f1 + ratio * (f2 - f1)) / 1000) * 1000;
-                break;
-            }
-        }
+        const factor = bubtongDiscountFactor(salePrice);
+        baseFee = factor > 1 ? factor : bubtongRoundUp(bubtongStandardFee(salePrice) * factor);
     }
 
     // fee는 부가세 별도 금액(보수료) → 부가세 10% 추가 (2026-07-30 정책 변경)
-    const baseFee = fee;
     const vat = Math.round(baseFee * 0.1);
     const total = baseFee + vat;
 

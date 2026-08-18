@@ -1160,6 +1160,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!lastResult) return;
 
             // 법무통 견적서 제출폼 순서 (채권 항목은 제외): 취득세, 지방교육세, 농어촌특별세, 인지대, 증지대, 법무사비용, 부가세
+            // 뒤에 이름·적용세율 메모(note)를 추가로 붙여 법무통 자동채움 스크립트의 메모란 채움에 사용
             const values = [
                 lastResult.acquisition.acquisitionTax,
                 lastResult.acquisition.educationTax,
@@ -1167,7 +1168,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 lastResult.stampTax,
                 lastResult.registrationFee,
                 parseInputNumber(document.getElementById('lawyerFeeInput').value),
-                parseInputNumber(document.getElementById('lawyerVatInput').value)
+                parseInputNumber(document.getElementById('lawyerVatInput').value),
+                document.getElementById('clientName').value.trim(),
+                lastResult.acquisition.note
             ];
 
             const text = values.join('\t');

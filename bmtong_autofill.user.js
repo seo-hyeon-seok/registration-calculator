@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         법무통 견적서 자동채움
 // @namespace    https://seo-hyeon-seok.github.io/registration-calculator/
-// @version      1.0
+// @version      1.1
 // @description  등기비용 계산기의 "법무통용 복사" 클립보드 값을 법무통 견적서 입력폼에 자동으로 채워줍니다 (채권 항목은 채우지 않음, 제출은 직접)
 // @match        https://www.bmtong.co.kr/partner/estimates/*
 // @match        https://bmtong.co.kr/partner/estimates/*
@@ -15,9 +15,13 @@
     // 법무통 폼의 실제 항목명 표기: 법무사비용 -> 보수료, 부가세 -> 부가가치세
     const LABEL_ORDER = ['취득세', '지방교육세', '농어촌특별세', '인지대', '증지대', '보수료', '부가가치세'];
 
-    const MEMO_TEXT = `안녕하세요. 최병섭 법무사 사무실입니다.
+    // 이름(name)·적용세율(rateNote)은 계산기의 "법무통용 복사" 값(클립보드 8, 9번째 필드)에서 채워짐
+    function buildMemoText(name, rateNote) {
+        const greeting = name ? `안녕하세요. ${name}님, 최병섭 법무사 사무실입니다.` : '안녕하세요. 최병섭 법무사 사무실입니다.';
+        const rateLine = rateNote ? `\n■ 적용세율: ${rateNote}` : '';
+        return `${greeting}
 
-■ 등기비용《상담•문의》 010-3971-7708
+■ 등기비용《상담•문의》 010-3971-7708${rateLine}
 
 ■ 잔금일 당일 해당 부동산으로  방문합니다.
 ■ 추가비용 없이,  당일 시세 채권만 포함되어 진행됩니다.
@@ -29,6 +33,7 @@
 
 등기 관련 문의는 편하게 연락 주세요.
 010-3971-7708`;
+    }
 
     function setReactInputValue(input, value) {
         // 포커스를 주면 "부가세" 등 일부 칸이 자체적으로 값을 비우는 사이트 동작이 있어
@@ -66,7 +71,9 @@
 
             const memoTextarea = document.querySelector('textarea[placeholder="고객에게 전달할 메모를 입력해주세요."]');
             if (memoTextarea) {
-                setReactInputValue(memoTextarea, MEMO_TEXT);
+                const clientName = (values[7] || '').trim();
+                const rateNote = (values[8] || '').trim();
+                setReactInputValue(memoTextarea, buildMemoText(clientName, rateNote));
             }
 
             let msg = `${filled}개 항목을 채웠습니다. (채권 항목은 채우지 않음)\n금액을 확인한 뒤 직접 제출해주세요.`;

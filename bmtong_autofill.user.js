@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         법무통 견적서 자동채움
 // @namespace    https://seo-hyeon-seok.github.io/registration-calculator/
-// @version      1.1
+// @version      1.2
 // @description  등기비용 계산기의 "법무통용 복사" 클립보드 값을 법무통 견적서 입력폼에 자동으로 채워줍니다 (채권 항목은 채우지 않음, 제출은 직접)
 // @match        https://www.bmtong.co.kr/partner/estimates/*
 // @match        https://bmtong.co.kr/partner/estimates/*
@@ -18,7 +18,7 @@
     // 이름(name)·적용세율(rateNote)은 계산기의 "법무통용 복사" 값(클립보드 8, 9번째 필드)에서 채워짐
     function buildMemoText(name, rateNote) {
         const greeting = name ? `안녕하세요. ${name}님, 최병섭 법무사 사무실입니다.` : '안녕하세요. 최병섭 법무사 사무실입니다.';
-        const rateLine = rateNote ? `\n■ 적용세율: ${rateNote}` : '';
+        const rateLine = rateNote ? `\n■ ${name ? name + '님 ' : ''}적용세율 : ${rateNote}` : '';
         return `${greeting}
 
 ■ 등기비용《상담•문의》 010-3971-7708${rateLine}

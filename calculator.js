@@ -1458,14 +1458,18 @@ function saveImage() {
     // 공시가격은 4월 말에 공시되므로 올해 → 전년 순서로 찾는다
     async function fetchAptPrices(pnu, dong, ho, key) {
         const thisYear = new Date().getFullYear();
+        // 단지에 따라 동 이름이 "104"(숫자만) 또는 "617동"(동 포함)으로 등록되어 있어 둘 다 시도한다
+        const dongNames = dong ? [dong, dong + '동'] : [''];
         for (const year of [thisYear, thisYear - 1]) {
-            const url = 'https://api.vworld.kr/ned/data/getApartHousingPriceAttr?format=json&numOfRows=100&pageNo=1'
-                + '&key=' + key + '&domain=' + VWORLD_DOMAIN + '&pnu=' + pnu + '&stdrYear=' + year
-                + (dong ? '&dongNm=' + encodeURIComponent(dong) : '') + '&hoNm=' + encodeURIComponent(ho);
-            const data = await vworldJsonp(url);
-            const res = data.apartHousingPrices;
-            if (res && Array.isArray(res.field) && res.field.length) return res.field;
-            if (res && res.resultCode === 'INCORRECT_KEY') throw new Error('인증키 정보가 올바르지 않습니다.');
+            for (const dongName of dongNames) {
+                const url = 'https://api.vworld.kr/ned/data/getApartHousingPriceAttr?format=json&numOfRows=100&pageNo=1'
+                    + '&key=' + key + '&domain=' + VWORLD_DOMAIN + '&pnu=' + pnu + '&stdrYear=' + year
+                    + (dongName ? '&dongNm=' + encodeURIComponent(dongName) : '') + '&hoNm=' + encodeURIComponent(ho);
+                const data = await vworldJsonp(url);
+                const res = data.apartHousingPrices;
+                if (res && Array.isArray(res.field) && res.field.length) return res.field;
+                if (res && res.resultCode === 'INCORRECT_KEY') throw new Error('인증키 정보가 올바르지 않습니다.');
+            }
         }
         return [];
     }
@@ -1504,7 +1508,7 @@ function saveImage() {
                 const unit = units.values().next().value;
                 standardPriceInput.value = formatNumber(Number(unit.pblntfPc));
                 standardPriceInput.dispatchEvent(new Event('input'));
-                showAptMsg(unit.aphusNm + ' ' + (unit.dongNm ? unit.dongNm + '동 ' : '') + unit.hoNm + '호 · 전용 ' + unit.prvuseAr + '㎡ · '
+                showAptMsg(unit.aphusNm + ' ' + (unit.dongNm ? unit.dongNm.replace(/동$/, '') + '동 ' : '') + unit.hoNm + '호 · 전용 ' + unit.prvuseAr + '㎡ · '
                     + unit.stdrYear + '년 공시가격을 채웠습니다.', 'ok');
             } catch (e) {
                 showAptMsg('조회에 실패했습니다. ' + e.message, 'error');

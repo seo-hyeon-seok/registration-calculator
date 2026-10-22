@@ -12,7 +12,10 @@
 <body>
     <div class="container ds-container ds-container-narrow">
         <header class="app-header ds-card ds-card-hero">
-            <h1 class="ds-h1">부동산 등기비용 계산기</h1>
+            <div class="header-title">
+                <div class="header-anim" id="headerAnim" aria-hidden="true"></div>
+                <h1 class="ds-h1">부동산 등기비용 계산기</h1>
+            </div>
             <p class="subtitle">취득세, 국민주택채권, 법무사 수수료까지 한방에 ~~~</p>
         </header>
 
@@ -68,7 +71,7 @@
                 <h2 class="ds-h4">2. 부동산 유형 선택</h2>
                 <div class="property-type-grid">
                     <button class="property-type-btn ds-card ds-card-interactive active" data-type="apartment">
-                        <svg class="ds-icon ds-icon-lg icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                        <svg class="ds-icon ds-icon-lg icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M18 4.933V21"/><path d="m4 6 7.106-3.79a2 2 0 0 1 1.788 0L20 6"/><path d="m6 11-3.52 2.147a1 1 0 0 0-.48.854V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a1 1 0 0 0-.48-.853L18 11"/><path d="M6 4.933V21"/><circle cx="12" cy="9" r="2"/></svg>
                         <span class="label">주택/아파트</span>
                     </button>
                     <button class="property-type-btn ds-card ds-card-interactive" data-type="commercial">
@@ -208,6 +211,15 @@
                         <button type="button" class="search-btn ds-btn ds-btn-secondary" id="searchStandardPriceBtn">찾기</button>
                     </div>
                     <span class="price-korean" id="standardPriceKorean"></span>
+                    <!-- 아파트(공동주택) 공시가격 자동 조회 (주택/아파트 유형에서만 표시) -->
+                    <div class="apt-lookup" id="aptLookup">
+                        <div class="apt-lookup-row">
+                            <input type="text" class="ds-input" id="aptDong" placeholder="동 (예: 104)" aria-label="동">
+                            <input type="text" class="ds-input" id="aptHo" placeholder="호 (예: 1307)" aria-label="호">
+                            <button type="button" class="ds-btn ds-btn-secondary" id="aptLookupBtn">공시가격 조회</button>
+                        </div>
+                        <p class="apt-lookup-msg ds-help" id="aptLookupMsg" role="status">부동산 주소와 동·호를 입력하면 아파트 공시가격을 자동으로 채웁니다.</p>
+                    </div>
                     <p class="ds-help">
                         * 시가표준액을 모르시면 매매대금의 70~80% 수준으로 입력하세요.
                     </p>
@@ -410,7 +422,11 @@
         </footer>
     </div>
 
+    <script src="vworld-config.js"></script>
     <script src="calculator.js"></script>
+    <!-- 헤더 애니메이션 (Lottie) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="calc-animation.js"></script>
 
     <!-- 영수증 출력 전용 레이아웃 -->
     <div id="receipt" style="display:none;">

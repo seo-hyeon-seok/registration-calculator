@@ -1,4 +1,23 @@
 /* 등기비용 계산기 고유 레이아웃 — 색·글자·간격·모서리는 design-system 토큰(office-brown 테마)만 쓴다 */
+/* 다온폰트 볼라체 — 제목 전용 */
+@font-face {
+    font-family: 'DaOnBola';
+    src: url('DAON_BOLA.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* 선택된 폼 항목(칩·플랫폼 버튼·유형 카드)과 입력 포커스에 쓰는 진한 베이지 포인트(선택되면 흰 글자·아이콘). 입력 필드는 연한 회색 */
+:root {
+    --select-bg: #8a7352;
+    --select-border: #7a6444;
+    --select-fg: #ffffff;
+    --field-bg: #f4f4f5;
+    --field-border: var(--border-strong);
+    --field-ring: rgba(138, 115, 82, 0.35);
+    --focus-ring: rgba(138, 115, 82, 0.35);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -9,7 +28,15 @@ body {
 }
 
 .container {
+    max-width: 40rem;
     padding-block: var(--space-10);
+}
+
+.app-header h1 {
+    font-family: 'DaOnBola', sans-serif;
+    font-size: 2.4rem;
+    font-weight: var(--weight-regular);
+    letter-spacing: 0;
 }
 
 /* Header */
@@ -20,6 +47,23 @@ body {
     background: var(--accent);
     color: var(--accent-fg);
     border-color: var(--accent-border);
+}
+
+/* 타이틀 앞 애니메이션. 선이 어두워서 어두운 헤더 위에서는 밝은 라운드 정사각형 받침에 올린다 */
+.header-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+}
+
+.header-anim {
+    flex-shrink: 0;
+    width: 4rem;
+    height: 4rem;
+    padding: var(--space-1);
+    background: var(--bg-subtle);
+    border-radius: 1.25rem;
 }
 
 .app-header .subtitle {
@@ -58,6 +102,12 @@ body {
     color: var(--fg-muted);
 }
 
+.property-type-btn .icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    stroke-width: 1.5;
+}
+
 .property-type-btn .label {
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
@@ -68,13 +118,13 @@ body {
 }
 
 .property-type-btn.active {
-    border-color: var(--accent-border);
-    background: var(--accent-soft);
-    color: var(--fg);
+    border-color: var(--select-border);
+    background: var(--select-bg);
+    color: var(--select-fg);
 }
 
 .property-type-btn.active .icon {
-    color: var(--accent-text);
+    color: var(--select-fg);
 }
 
 .property-type-btn:focus-visible {
@@ -87,12 +137,28 @@ body {
     padding: 0 var(--space-2);
 }
 
-/* 선택된 플랫폼은 알약 탭의 활성 표시와 같은 포인트 면 */
+/* 선택된 플랫폼은 옐로우 포인트 */
 .platform-btn.active,
 .platform-btn.active:hover:not(:disabled) {
-    background: var(--accent);
-    color: var(--accent-fg);
-    border-color: var(--accent);
+    background: var(--select-bg);
+    color: var(--select-fg);
+    border-color: var(--select-border);
+}
+
+/* 입력 필드는 연한 회색 면 + 회색 테두리 (포커스하면 흰색 + 옐로우 테두리) */
+.ds-input {
+    background: var(--field-bg);
+    border-color: var(--field-border);
+}
+
+.ds-input:hover {
+    border-color: var(--field-border);
+}
+
+.ds-input:focus {
+    background: var(--surface);
+    border-color: var(--select-border);
+    box-shadow: 0 0 0 3px var(--field-ring);
 }
 
 /* Form Groups */
@@ -167,9 +233,10 @@ body {
 }
 
 .radio-label:has(input:checked) {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-fg);
+    background: var(--select-bg);
+    border-color: var(--select-border);
+    color: var(--select-fg);
+    font-weight: var(--weight-semibold);
 }
 
 .radio-label:has(input:focus-visible) {
@@ -192,19 +259,21 @@ body {
     transition: all var(--dur-premium) var(--ease-premium);
 }
 
+/* 전용면적 체크박스는 선택 칩과 달리 연한 베이지 톤 */
 .option-group > label:has(input[type="checkbox"]):hover,
 .option-group > label:has(input[type="checkbox"]:checked) {
-    border-color: var(--success);
+    border-color: #d8c49b;
 }
 
 .option-group > label:has(input[type="checkbox"]:checked) {
-    background: var(--success-soft);
+    background: #faf7f2;
+    color: var(--fg);
 }
 
 .option-group input[type="checkbox"] {
     width: 1.125rem;
     height: 1.125rem;
-    accent-color: var(--success);
+    accent-color: var(--accent);
 }
 
 /* 공동명의 / 다대사건 */
@@ -284,7 +353,6 @@ body {
 }
 
 .share-input[readonly] {
-    background: var(--surface-hover);
     color: var(--fg-muted);
 }
 
@@ -436,8 +504,8 @@ body {
 .fee-input {
     width: 6rem;
     padding: var(--space-1) var(--space-2);
-    background: var(--accent-soft);
-    border: 1px solid var(--accent-border);
+    background: var(--field-bg);
+    border: 1px solid var(--field-border);
     border-radius: var(--radius-sm);
     outline: none;
     font-family: inherit;
@@ -451,13 +519,14 @@ body {
 }
 
 .fee-input:hover {
-    border-color: var(--accent-text);
+    border-color: var(--field-border);
 }
 
 .fee-input:focus {
     background: var(--surface);
+    border-color: var(--select-border);
     color: var(--fg);
-    box-shadow: 0 0 0 3px var(--focus-ring);
+    box-shadow: 0 0 0 3px var(--field-ring);
 }
 
 /* 할인 표시 */
@@ -571,7 +640,7 @@ input:disabled {
 /* Footer */
 footer {
     text-align: center;
-    padding: var(--space-10) var(--space-5);
+    padding: 0 var(--space-5) var(--space-10);
 }
 
 footer img {
@@ -593,6 +662,17 @@ footer img {
     .app-header {
         padding: var(--space-10) var(--space-6);
         margin-bottom: var(--space-6);
+    }
+
+    .app-header h1 {
+        font-size: 1.5rem;
+        letter-spacing: 0;
+    }
+
+    .header-anim {
+        width: 3rem;
+        height: 3rem;
+        padding: var(--space-1);
     }
 
     .property-type-grid {
@@ -648,4 +728,27 @@ footer img {
 ::selection {
     background: var(--accent);
     color: var(--accent-fg);
+}
+
+/* 아파트 공시가격 조회 */
+.apt-lookup {
+    margin-top: var(--space-3);
+}
+
+.apt-lookup-row {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.apt-lookup-row .ds-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.apt-lookup-msg.error {
+    color: var(--danger);
+}
+
+.apt-lookup-msg.ok {
+    color: var(--success);
 }

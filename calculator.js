@@ -1509,7 +1509,7 @@ function saveImage() {
                 standardPriceInput.value = formatNumber(Number(unit.pblntfPc));
                 standardPriceInput.dispatchEvent(new Event('input'));
                 showAptMsg(unit.aphusNm + ' ' + (unit.dongNm ? unit.dongNm.replace(/동$/, '') + '동 ' : '') + unit.hoNm + '호 · 전용 ' + unit.prvuseAr + '㎡ · '
-                    + unit.stdrYear + '년 공시가격을 채웠습니다.', 'ok');
+                    + unit.stdrYear + '년 공시가격을 조회했습니다.', 'ok');
             } catch (e) {
                 showAptMsg('조회에 실패했습니다. ' + e.message, 'error');
             } finally {

@@ -51,7 +51,7 @@ body {
     border-color: var(--accent-border);
 }
 
-/* 타이틀 앞 애니메이션. 선이 어두워서 어두운 헤더 위에서는 밝은 라운드 정사각형 받침에 올린다 */
+/* 타이틀 앞 애니메이션. 선이 어두워서 어두운 헤더 위에서는 반투명(20%) 흰색 원 받침에 올린다 */
 .header-title {
     display: flex;
     align-items: center;
@@ -64,12 +64,19 @@ body {
     width: 4rem;
     height: 4rem;
     padding: var(--space-1);
-    background: var(--bg-subtle);
-    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+/* 제목과 부제를 한 덩어리로 묶어, 부제가 제목 바로 아래에 오게 한다 */
+.header-text {
+    text-align: center;
+    transform: translateX(calc(var(--space-3) * -1)); /* 제목·부제를 함께 왼쪽으로 12px 이동 (애니메이션 위치는 그대로) */
 }
 
 .app-header .subtitle {
-    margin-top: var(--space-3);
+    margin-top: var(--space-2);
+    padding-left: var(--space-4); /* 부제만 가운데에서 조금 오른쪽으로 (왼쪽 여백 16px = 약 8px 이동) */
     font-size: var(--text-sm);
     opacity: 0.8;
 }
@@ -660,6 +667,14 @@ footer img {
     .app-header h1 {
         font-size: 1.5rem;
         letter-spacing: 0;
+    }
+
+    .app-header .subtitle {
+        padding-left: 0; /* 좁은 화면에서는 글자 공간이 모자라 이동하지 않는다 */
+    }
+
+    .header-text {
+        transform: none;
     }
 
     .header-anim {

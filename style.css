@@ -51,7 +51,7 @@ body {
     border-color: var(--accent-border);
 }
 
-/* 타이틀 앞 애니메이션. 선이 어두워서 어두운 헤더 위에서는 반투명(20%) 흰색 원 받침에 올린다 */
+/* 타이틀 앞 애니메이션. 선이 어두워서 어두운 헤더 위에서는 반투명(25%) 흰색 원 받침에 올린다 */
 .header-title {
     display: flex;
     align-items: center;
@@ -64,7 +64,7 @@ body {
     width: 4rem;
     height: 4rem;
     padding: var(--space-1);
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.25);
     border-radius: 50%;
 }
 

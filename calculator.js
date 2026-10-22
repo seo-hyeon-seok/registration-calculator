@@ -1607,6 +1607,8 @@ function saveImage() {
             if (data && data.rate) {
                 bondRateInput.value = data.rate;
                 bondRateInput.placeholder = `${data.date} 기준`;
+                const bondRateDate = document.getElementById('bondRateDate');
+                if (bondRateDate) bondRateDate.textContent = `(${data.date} 기준 자동 입력)`;
             }
         })
         .catch(() => {});

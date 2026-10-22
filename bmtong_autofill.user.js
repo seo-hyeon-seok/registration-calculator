@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         법무통 견적서 자동채움
 // @namespace    https://seo-hyeon-seok.github.io/registration-calculator/
-// @version      1.2
-// @description  등기비용 계산기의 "법무통용 복사" 클립보드 값을 법무통 견적서 입력폼에 자동으로 채워줍니다 (채권 항목은 채우지 않음, 제출은 직접)
+// @version      1.3
+// @description  등기비용 계산기의 "법무통용 복사" 클립보드 값을 법무통 견적서 입력폼에 자동으로 채워줍니다 (채권은 시가표준액이 조회된 경우에만 채움, 제출은 직접)
 // @match        https://www.bmtong.co.kr/partner/estimates/*
 // @match        https://bmtong.co.kr/partner/estimates/*
 // @grant        none
@@ -11,7 +11,7 @@
 (function () {
     'use strict';
 
-    // 계산기 "법무통용 복사" 버튼이 만드는 순서와 동일해야 함 (채권 제외 7개)
+    // 계산기 "법무통용 복사" 버튼이 만드는 순서와 동일해야 함 (채권 제외 7개, 이후 8번째 이름·9번째 적용세율·10번째 채권 실제 부담액)
     // 법무통 폼의 실제 항목명 표기: 법무사비용 -> 보수료, 부가세 -> 부가가치세
     const LABEL_ORDER = ['취득세', '지방교육세', '농어촌특별세', '인지대', '증지대', '보수료', '부가가치세'];
 
@@ -69,6 +69,23 @@
                 filled++;
             });
 
+            // 채권: 항목명에 "채권"이 들어간 행에 실제 부담액(10번째 값)을 채운다. 값이 비어 있으면(시가표준액 미조회) 채우지 않는다
+            const bondAmount = (values[9] || '').trim();
+            let bondNote = '';
+            if (bondAmount) {
+                const bondNameInput = Array.from(nameInputs).find(el => el.value.includes('채권'));
+                const bondRow = bondNameInput ? bondNameInput.parentElement : null;
+                const bondInput = bondRow ? bondRow.querySelector('input[placeholder="금액"]') : null;
+                if (bondInput) {
+                    setReactInputValue(bondInput, bondAmount);
+                    filled++;
+                } else {
+                    missing.push('채권');
+                }
+            } else {
+                bondNote = '\n채권은 시가표준액이 조회되지 않아 채우지 않았습니다.';
+            }
+
             const memoTextarea = document.querySelector('textarea[placeholder="고객에게 전달할 메모를 입력해주세요."]');
             if (memoTextarea) {
                 const clientName = (values[7] || '').trim();
@@ -76,7 +93,7 @@
                 setReactInputValue(memoTextarea, buildMemoText(clientName, rateNote));
             }
 
-            let msg = `${filled}개 항목을 채웠습니다. (채권 항목은 채우지 않음)\n금액을 확인한 뒤 직접 제출해주세요.`;
+            let msg = `${filled}개 항목을 채웠습니다.${bondNote}\n금액을 확인한 뒤 직접 제출해주세요.`;
             if (missing.length > 0) {
                 msg += `\n\n찾지 못한 항목: ${missing.join(', ')}`;
             }

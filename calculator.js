@@ -784,6 +784,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     addressInput.value = fullAddress;
+                    // 공시가격 조회용 지번주소 (직접 수정하면 아래 input 핸들러가 비운다)
+                    addressInput.dataset.jibun = data.jibunAddress || data.autoJibunAddress || '';
 
                     // 지역 자동 선택 (특별시/광역시 vs 기타지역)
                     const sido = data.sido;
@@ -807,6 +809,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 주소 직접 입력 시 지역 자동 감지
     if (addressInput) {
         addressInput.addEventListener('input', function() {
+            delete this.dataset.jibun;
             const addr = this.value;
 
             // 서울 구 이름 포함 여부 먼저 확인 (서울 없이 구 이름만 입력해도 서울로 판단)
@@ -834,6 +837,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 옵션 섹션 표시/숨김
             housingOptions.classList.toggle('hidden', currentPropertyType !== 'apartment');
             landOptions.classList.toggle('hidden', currentPropertyType !== 'land');
+            document.getElementById('aptLookup').classList.toggle('hidden', currentPropertyType !== 'apartment' || !window.VWORLD_KEY);
 
             // 섹션 번호 업데이트
             sectionNumber.textContent = (currentPropertyType === 'apartment' || currentPropertyType === 'land') ? '4' : '3';
@@ -1408,6 +1412,104 @@ function saveImage() {
             const value = parseInputNumber(this.value);
             if (value > 0) {
                 this.value = formatNumber(value);
+            }
+        });
+    }
+
+    // ===== 아파트 공시가격 조회 (브이월드 공동주택가격, JSONP) =====
+    // 브이월드 응답에는 CORS 헤더가 없어서 callback 파라미터(JSONP)로 호출한다.
+    const VWORLD_DOMAIN = 'seo-hyeon-seok.github.io'; // 인증키 신청서에 등록한 서비스 URL의 호스트
+    const aptLookupBtn = document.getElementById('aptLookupBtn');
+    const aptLookupMsg = document.getElementById('aptLookupMsg');
+    // 인증키 파일(vworld-config.js)이 없는 배포 환경에서는 조회 영역을 숨긴다
+    if (!window.VWORLD_KEY) document.getElementById('aptLookup').classList.add('hidden');
+
+    function vworldJsonp(url) {
+        return new Promise((resolve, reject) => {
+            const cb = 'vwCb' + Date.now() + Math.floor(Math.random() * 1000000);
+            const script = document.createElement('script');
+            const cleanup = () => { clearTimeout(timer); delete window[cb]; script.remove(); };
+            const timer = setTimeout(() => { cleanup(); reject(new Error('응답 시간이 초과되었습니다.')); }, 15000);
+            window[cb] = data => { cleanup(); resolve(data); };
+            script.onerror = () => { cleanup(); reject(new Error('조회 서비스에 연결하지 못했습니다.')); };
+            script.src = url + '&callback=' + cb;
+            document.head.appendChild(script);
+        });
+    }
+
+    // 지번주소 → PNU(필지고유번호). 도로명주소면 지번주소로 한 번 바꿔서 다시 찾는다
+    async function findPnu(address, key) {
+        const search = async (query, category) => {
+            const data = await vworldJsonp('https://api.vworld.kr/req/search?service=search&request=search&version=2.0&crs=EPSG:4326&size=1&page=1&type=address&format=json'
+                + '&category=' + category + '&query=' + encodeURIComponent(query) + '&key=' + key);
+            const res = data.response;
+            return res && res.status === 'OK' ? res.result.items[0] : null;
+        };
+        const parcel = await search(address, 'parcel');
+        if (parcel) return parcel.id;
+        const road = await search(address, 'road');
+        if (road && road.address && road.address.parcel) {
+            const again = await search(road.address.parcel, 'parcel');
+            if (again) return again.id;
+        }
+        return null;
+    }
+
+    // 공시가격은 4월 말에 공시되므로 올해 → 전년 순서로 찾는다
+    async function fetchAptPrices(pnu, dong, ho, key) {
+        const thisYear = new Date().getFullYear();
+        for (const year of [thisYear, thisYear - 1]) {
+            const url = 'https://api.vworld.kr/ned/data/getApartHousingPriceAttr?format=json&numOfRows=100&pageNo=1'
+                + '&key=' + key + '&domain=' + VWORLD_DOMAIN + '&pnu=' + pnu + '&stdrYear=' + year
+                + (dong ? '&dongNm=' + encodeURIComponent(dong) : '') + '&hoNm=' + encodeURIComponent(ho);
+            const data = await vworldJsonp(url);
+            const res = data.apartHousingPrices;
+            if (res && Array.isArray(res.field) && res.field.length) return res.field;
+            if (res && res.resultCode === 'INCORRECT_KEY') throw new Error('인증키 정보가 올바르지 않습니다.');
+        }
+        return [];
+    }
+
+    function showAptMsg(text, type) {
+        aptLookupMsg.textContent = text;
+        aptLookupMsg.classList.toggle('error', type === 'error');
+        aptLookupMsg.classList.toggle('ok', type === 'ok');
+    }
+
+    if (aptLookupBtn) {
+        aptLookupBtn.addEventListener('click', async function() {
+            const key = window.VWORLD_KEY;
+            if (!key) { showAptMsg('조회 인증키가 설정되지 않았습니다. (vworld-config.js)', 'error'); return; }
+
+            // 지번주소가 있으면 우선 사용하고, 직접 입력한 주소는 "(건물명)" 부분을 뗀다
+            const address = (addressInput.dataset.jibun || addressInput.value.replace(/\s*\(.*\)\s*$/, '')).trim();
+            const dong = document.getElementById('aptDong').value.trim().replace(/동$/, '');
+            const ho = document.getElementById('aptHo').value.trim().replace(/호$/, '');
+            if (!address) { showAptMsg('부동산 주소를 먼저 입력해 주세요.', 'error'); return; }
+            if (!ho) { showAptMsg('호수를 입력해 주세요.', 'error'); return; }
+
+            aptLookupBtn.disabled = true;
+            showAptMsg('공시가격을 조회하는 중입니다...');
+            try {
+                const pnu = await findPnu(address, key);
+                if (!pnu) { showAptMsg('주소를 찾지 못했습니다. 주소 찾기 버튼으로 다시 선택해 주세요.', 'error'); return; }
+
+                const rows = await fetchAptPrices(pnu, dong, ho, key);
+                if (!rows.length) { showAptMsg('해당 동·호의 공시가격을 찾지 못했습니다. 동·호를 확인해 주세요.', 'error'); return; }
+
+                // 같은 세대가 중복으로 오는 경우가 있어 동·호 기준으로 합친다
+                const units = new Map(rows.map(r => [r.dongNm + '|' + r.hoNm, r]));
+                if (units.size > 1) { showAptMsg('같은 호가 여러 동에 있습니다. 동도 입력해 주세요.', 'error'); return; }
+
+                const unit = units.values().next().value;
+                standardPriceInput.value = formatNumber(Number(unit.pblntfPc));
+                standardPriceInput.dispatchEvent(new Event('input'));
+                showAptMsg(unit.aphusNm + ' ' + (unit.dongNm ? unit.dongNm + '동 ' : '') + unit.hoNm + '호 · 전용 ' + unit.prvuseAr + '㎡ · '
+                    + unit.stdrYear + '년 공시가격을 채웠습니다.', 'ok');
+            } catch (e) {
+                showAptMsg('조회에 실패했습니다. ' + e.message, 'error');
+            } finally {
+                aptLookupBtn.disabled = false;
             }
         });
     }

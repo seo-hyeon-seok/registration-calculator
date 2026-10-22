@@ -1,1 +1,5 @@
 __pycache__/
+
+# 브이월드 인증키 (절대 커밋 금지)
+vworld_key.txt
+vworld-config.js

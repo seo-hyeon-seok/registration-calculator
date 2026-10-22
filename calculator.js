@@ -1163,8 +1163,9 @@ document.addEventListener('DOMContentLoaded', function() {
         copyForBubtongBtn.addEventListener('click', function() {
             if (!lastResult) return;
 
-            // 법무통 견적서 제출폼 순서 (채권 항목은 제외): 취득세, 지방교육세, 농어촌특별세, 인지대, 증지대, 법무사비용, 부가세
-            // 뒤에 이름·적용세율 메모(note)를 추가로 붙여 법무통 자동채움 스크립트의 메모란 채움에 사용
+            // 법무통 견적서 제출폼 순서: 취득세, 지방교육세, 농어촌특별세, 인지대, 증지대, 법무사비용, 부가세
+            // 뒤에 이름·적용세율 메모(note), 채권 실제 부담액을 차례로 붙인다 (구버전 스크립트가 깨지지 않도록 기존 순서는 유지)
+            // 채권은 시가표준액이 없어 계산되지 않았으면 빈 값으로 두어 스크립트가 채우지 않게 한다
             const values = [
                 lastResult.acquisition.acquisitionTax,
                 lastResult.acquisition.educationTax,
@@ -1174,7 +1175,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 parseInputNumber(document.getElementById('lawyerFeeInput').value),
                 parseInputNumber(document.getElementById('lawyerVatInput').value),
                 document.getElementById('clientName').value.trim(),
-                lastResult.acquisition.note
+                lastResult.acquisition.note,
+                lastResult.bond.discountAmount > 0 ? lastResult.bond.discountAmount : ''
             ];
 
             const text = values.join('\t');
@@ -1448,6 +1450,8 @@ function saveImage() {
         const parcel = await search(address, 'parcel');
         if (parcel) return parcel.id;
         const road = await search(address, 'road');
+        // 도로명주소 검색 결과의 id도 19자리 PNU다 (결과의 지번주소는 시·군·구가 빠져 있어 다시 검색하면 엉뚱한 필지가 나올 수 있다)
+        if (road && /^\d{19}$/.test(road.id)) return road.id;
         if (road && road.address && road.address.parcel) {
             const again = await search(road.address.parcel, 'parcel');
             if (again) return again.id;
@@ -1480,42 +1484,47 @@ function saveImage() {
         aptLookupMsg.classList.toggle('ok', type === 'ok');
     }
 
+    // 공시가격을 조회해 시가표준액 칸을 채운다. 성공하면 true (addressOverride: 법무통 카드 자동채움처럼 주소를 따로 넘길 때)
+    async function runAptLookup(addressOverride) {
+        const key = window.VWORLD_KEY;
+        if (!key) { showAptMsg('조회 인증키가 설정되지 않았습니다. (vworld-config.js)', 'error'); return false; }
+
+        // 지번주소가 있으면 우선 사용하고, 직접 입력한 주소는 "(건물명)" 부분을 뗀다
+        const address = (addressOverride || addressInput.dataset.jibun || addressInput.value.replace(/\s*\(.*\)\s*$/, '')).trim();
+        const dong = document.getElementById('aptDong').value.trim().replace(/동$/, '');
+        const ho = document.getElementById('aptHo').value.trim().replace(/호$/, '');
+        if (!address) { showAptMsg('부동산 주소를 먼저 입력해 주세요.', 'error'); return false; }
+        if (!ho) { showAptMsg('호수를 입력해 주세요.', 'error'); return false; }
+
+        aptLookupBtn.disabled = true;
+        showAptMsg('공시가격을 조회하는 중입니다...');
+        try {
+            const pnu = await findPnu(address, key);
+            if (!pnu) { showAptMsg('주소를 찾지 못했습니다. 주소 찾기 버튼으로 다시 선택해 주세요.', 'error'); return false; }
+
+            const rows = await fetchAptPrices(pnu, dong, ho, key);
+            if (!rows.length) { showAptMsg('해당 동·호의 공시가격을 찾지 못했습니다. 동·호를 확인해 주세요.', 'error'); return false; }
+
+            // 같은 세대가 중복으로 오는 경우가 있어 동·호 기준으로 합친다
+            const units = new Map(rows.map(r => [r.dongNm + '|' + r.hoNm, r]));
+            if (units.size > 1) { showAptMsg('같은 호가 여러 동에 있습니다. 동도 입력해 주세요.', 'error'); return false; }
+
+            const unit = units.values().next().value;
+            standardPriceInput.value = formatNumber(Number(unit.pblntfPc));
+            standardPriceInput.dispatchEvent(new Event('input'));
+            showAptMsg(unit.aphusNm + ' ' + (unit.dongNm ? unit.dongNm.replace(/동$/, '') + '동 ' : '') + unit.hoNm + '호 · 전용 ' + unit.prvuseAr + '㎡ · '
+                + unit.stdrYear + '년 공시가격을 조회했습니다.', 'ok');
+            return true;
+        } catch (e) {
+            showAptMsg('조회에 실패했습니다. ' + e.message, 'error');
+            return false;
+        } finally {
+            aptLookupBtn.disabled = false;
+        }
+    }
+
     if (aptLookupBtn) {
-        aptLookupBtn.addEventListener('click', async function() {
-            const key = window.VWORLD_KEY;
-            if (!key) { showAptMsg('조회 인증키가 설정되지 않았습니다. (vworld-config.js)', 'error'); return; }
-
-            // 지번주소가 있으면 우선 사용하고, 직접 입력한 주소는 "(건물명)" 부분을 뗀다
-            const address = (addressInput.dataset.jibun || addressInput.value.replace(/\s*\(.*\)\s*$/, '')).trim();
-            const dong = document.getElementById('aptDong').value.trim().replace(/동$/, '');
-            const ho = document.getElementById('aptHo').value.trim().replace(/호$/, '');
-            if (!address) { showAptMsg('부동산 주소를 먼저 입력해 주세요.', 'error'); return; }
-            if (!ho) { showAptMsg('호수를 입력해 주세요.', 'error'); return; }
-
-            aptLookupBtn.disabled = true;
-            showAptMsg('공시가격을 조회하는 중입니다...');
-            try {
-                const pnu = await findPnu(address, key);
-                if (!pnu) { showAptMsg('주소를 찾지 못했습니다. 주소 찾기 버튼으로 다시 선택해 주세요.', 'error'); return; }
-
-                const rows = await fetchAptPrices(pnu, dong, ho, key);
-                if (!rows.length) { showAptMsg('해당 동·호의 공시가격을 찾지 못했습니다. 동·호를 확인해 주세요.', 'error'); return; }
-
-                // 같은 세대가 중복으로 오는 경우가 있어 동·호 기준으로 합친다
-                const units = new Map(rows.map(r => [r.dongNm + '|' + r.hoNm, r]));
-                if (units.size > 1) { showAptMsg('같은 호가 여러 동에 있습니다. 동도 입력해 주세요.', 'error'); return; }
-
-                const unit = units.values().next().value;
-                standardPriceInput.value = formatNumber(Number(unit.pblntfPc));
-                standardPriceInput.dispatchEvent(new Event('input'));
-                showAptMsg(unit.aphusNm + ' ' + (unit.dongNm ? unit.dongNm.replace(/동$/, '') + '동 ' : '') + unit.hoNm + '호 · 전용 ' + unit.prvuseAr + '㎡ · '
-                    + unit.stdrYear + '년 공시가격을 조회했습니다.', 'ok');
-            } catch (e) {
-                showAptMsg('조회에 실패했습니다. ' + e.message, 'error');
-            } finally {
-                aptLookupBtn.disabled = false;
-            }
-        });
+        aptLookupBtn.addEventListener('click', () => runAptLookup());
     }
 
     // 시가표준액 찾기 버튼
@@ -1535,7 +1544,7 @@ function saveImage() {
     }
 
     // URL 쿼리파라미터 자동채움 (법무통 견적요청 카드 OCR 연동용, ocr_autofill.py가 생성한 링크로 진입 시 동작)
-    function applyUrlParams() {
+    async function applyUrlParams() {
         const params = new URLSearchParams(window.location.search);
         if (!params.has('salePrice')) return;
 
@@ -1553,9 +1562,18 @@ function saveImage() {
             clientNameInput.value = params.get('clientName');
         }
 
+        let lookupAddress = '';
         if (addressInput && params.get('address')) {
             addressInput.value = params.get('address');
             addressInput.dispatchEvent(new Event('input'));
+
+            // 주소 끝의 "2314동 803호"를 동·호 칸으로 옮기고, 괄호와 동·호를 뗀 기본주소를 조회에 쓴다
+            const unitMatch = addressInput.value.match(/(\S+?)\s*동\s+(\d+)\s*호\s*$/);
+            if (type !== 'commercial' && type !== 'land' && unitMatch) {
+                document.getElementById('aptDong').value = unitMatch[1];
+                document.getElementById('aptHo').value = unitMatch[2];
+                lookupAddress = addressInput.value.replace(unitMatch[0], '').replace(/\s*\([^)]*\)/g, '').trim();
+            }
         }
 
         if (params.get('salePrice')) {
@@ -1573,6 +1591,9 @@ function saveImage() {
             const under85Checkbox = document.getElementById('under85sqm');
             if (under85Checkbox) under85Checkbox.checked = params.get('under85') === '1';
         }
+
+        // 공시가격을 조회해 시가표준액을 채운 뒤 계산한다 (조회 실패해도 계산은 진행, 이때 채권은 0원)
+        if (lookupAddress) await runAptLookup(lookupAddress);
 
         calculateBtn.click();
     }

@@ -6,7 +6,7 @@ import time
 import webbrowser
 from urllib.parse import urlencode
 
-from PIL import ImageGrab
+from PIL import Image, ImageGrab
 
 CLIPBOARD_WAIT_TIMEOUT_SEC = 120
 CLIPBOARD_POLL_INTERVAL_SEC = 1
@@ -43,14 +43,20 @@ def image_hash(img):
     return hashlib.md5(img.tobytes()).hexdigest()
 
 
+def grab_clipboard_image():
+    # 클립보드에 파일 등 이미지가 아닌 것이 복사된 경우 grabclipboard()가 list를 반환하므로 걸러낸다
+    img = ImageGrab.grabclipboard()
+    return img if isinstance(img, Image.Image) else None
+
+
 def wait_for_new_clipboard_image():
-    baseline = ImageGrab.grabclipboard()
+    baseline = grab_clipboard_image()
     baseline_hash = image_hash(baseline) if baseline is not None else None
 
     print(f"클립보드에 새 이미지가 복사되기를 기다리는 중... (Win+Shift+S로 견적요청 카드를 캡쳐하세요, 최대 {CLIPBOARD_WAIT_TIMEOUT_SEC}초)")
     elapsed = 0
     while elapsed < CLIPBOARD_WAIT_TIMEOUT_SEC:
-        img = ImageGrab.grabclipboard()
+        img = grab_clipboard_image()
         if img is not None and image_hash(img) != baseline_hash:
             return img
         time.sleep(CLIPBOARD_POLL_INTERVAL_SEC)

@@ -12,6 +12,8 @@
     --select-bg: #8a7352;
     --select-border: #7a6444;
     --select-fg: #ffffff;
+    --hover-bg: #fcd34d;
+    --hover-fg: #111111;
     --field-bg: #f4f4f5;
     --field-border: var(--border-strong);
     --field-ring: rgba(138, 115, 82, 0.35);
@@ -354,6 +356,20 @@ body {
 
 .share-input[readonly] {
     color: var(--fg-muted);
+}
+
+/* 모든 버튼은 마우스를 올리면 옐로우 배경 + 검정 글자 (선택된 플랫폼·복사 완료 표시는 제외) */
+.ds-btn:hover:not(:disabled),
+.ds-btn.ds-btn-primary:hover:not(:disabled):not(.ds-btn-sm):not(.ds-btn-lg),
+.ds-btn-primary.ds-btn-sm:hover:not(:disabled),
+.ds-btn-primary.ds-btn-lg:hover:not(:disabled) {
+    background: var(--hover-bg);
+    border-color: var(--hover-bg);
+    color: var(--hover-fg);
+}
+
+.ds-btn-primary {
+    transition: background-color var(--dur-premium) var(--ease-premium), color var(--dur-premium) var(--ease-premium), padding var(--dur-base) var(--ease-bounce), transform var(--dur-base) var(--ease-bounce);
 }
 
 /* Calculate Button */

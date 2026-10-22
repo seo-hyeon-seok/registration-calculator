@@ -1,0 +1,47 @@
+/* 오피스 브라운 테마 — 등기비용 계산기에서 쓰는 베이지 배경과 짙은 갈색 포인트(금갈색 테두리). 부동산·법무 업무 도구에 어울린다 */
+[data-theme="office-brown"] {
+  color-scheme: light;
+
+  /* 배경과 면 */
+  --bg: #f5f0e8; /* 페이지 배경 (베이지) */
+  --bg-subtle: #faf7f2; /* 구역을 나눌 때 */
+  --surface: #ffffff; /* 카드 면 (그림자와 테두리로 구분) */
+  --surface-hover: #ebe3d6; /* 호버, 비활성 알약 탭 배경 */
+  --surface-raised: rgba(255, 255, 255, 0.8); /* 떠 있는 패널, 헤더 (뒤가 비치게) */
+  --overlay: rgba(44, 36, 22, 0.4);
+
+  /* 테두리 */
+  --border: #e0d6c8;
+  --border-strong: #d4c4a8;
+
+  /* 글자 */
+  --fg: #2c2416; /* 제목 */
+  --fg-body: #4a3f35; /* 본문 */
+  --fg-muted: #6b5d4d; /* 보조 글자 */
+  --fg-faint: #8c7d6a; /* 비활성·장식 전용(대비 3:1 이상). 읽어야 하는 글자에는 쓰지 않는다 */
+
+  /* 포인트: 버튼·선택 면에는 짙은 갈색, 베이지/흰 배경 위 글자·아이콘에는 대비가 충분한 금갈색 */
+  --accent: #3d3229; /* 짙은 갈색 */
+  --accent-hover: #4a3f35;
+  --accent-fg: #f5f0e8; /* 포인트 배경 위 글자 */
+  --accent-text: #7a6244; /* 밝은 배경 위 글자·아이콘 */
+  --accent-soft: #efe6d6;
+  --accent-border: rgba(139, 115, 85, 0.6); /* 금갈색 */
+
+  /* 상태 */
+  --success: #3f7a3f;
+  --success-soft: #eaf3e6;
+  --warning: #8a5a12;
+  --warning-soft: #f7ecd4;
+  --danger: #b3261e;
+  --danger-soft: #fbe9e7;
+  --info: #1d4ed8;
+  --info-soft: #eff6ff;
+
+  /* 포커스 */
+  --focus-ring: rgba(139, 115, 85, 0.45);
+
+  /* 그림자: 부드러운 금갈색 톤 */
+  --shadow-card: 0 4px 30px rgba(139, 115, 85, 0.12);
+  --shadow-pop: 0 20px 50px -12px rgba(44, 36, 22, 0.3);
+}

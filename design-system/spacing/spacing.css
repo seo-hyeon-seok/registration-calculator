@@ -1,0 +1,33 @@
+/* 간격, 모서리, 레이아웃 폭 — 4px 단위로 맞춘다 */
+:root {
+  /* 간격 (4px 단위). 이름은 Tailwind의 숫자와 같다(space-4 = p-4 = 16px) */
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px, 화면 좌우 최소 여백 */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px, 카드 안쪽 */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px, 구역 사이 */
+  --space-24: 6rem; /* 96px, 큰 구역 사이 */
+
+  /* 모서리. 역할에 따라 고른다 */
+  --radius-sm: 0.5rem; /* 8px, 작은 칩 */
+  --radius-control: 0.75rem; /* 12px, 입력창·작은 버튼 */
+  --radius-card: 1rem; /* 16px, 안쪽 카드·패널 */
+  --radius-hero: 2rem; /* 32px, 큰 카드·첫 화면 박스 */
+  --radius-pill: 9999px; /* 버튼·탭·배지는 알약 모양 */
+
+  /* 레이아웃 폭 */
+  --container-sm: 36rem; /* 576px, 폼·좁은 글 */
+  --container-md: 48rem; /* 768px, 글 읽기 */
+  --container-lg: 64rem; /* 1024px, 일반 페이지 */
+  --container-xl: 80rem; /* 1280px, 넓은 페이지 */
+  --gutter: var(--space-4); /* 화면 좌우 여백, 어떤 폭에서도 최소 16px */
+
+  /* 터치 영역 */
+  --tap-min: 2.75rem; /* 44px, 눌러야 하는 요소의 최소 크기 */
+}

@@ -1,0 +1,47 @@
+/* 오피스 다크 테마 — 사무실 홈페이지 스타일(어두운 배경, amber 포인트, 유리 느낌의 반투명 면) */
+[data-theme="office-dark"] {
+  color-scheme: dark;
+
+  /* 배경과 면 */
+  --bg: #09090b; /* zinc-950, 페이지 배경 */
+  --bg-subtle: #18181b; /* zinc-900, 구역을 나눌 때 */
+  --surface: rgba(255, 255, 255, 0.05); /* 카드 면 (유리 느낌) */
+  --surface-hover: rgba(255, 255, 255, 0.1);
+  --surface-raised: rgba(24, 24, 27, 0.6); /* 떠 있는 패널, 헤더 */
+  --overlay: rgba(9, 9, 11, 0.7);
+
+  /* 테두리 */
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
+
+  /* 글자 */
+  --fg: #fafafa; /* zinc-50, 제목 */
+  --fg-body: #e4e4e7; /* zinc-200, 본문 */
+  --fg-muted: #a1a1aa; /* zinc-400, 보조 */
+  --fg-faint: #71717a; /* zinc-500, 비활성·장식 전용. 읽어야 하는 글자에는 쓰지 않는다 */
+
+  /* 포인트 */
+  --accent: #fbbf24; /* amber-400, 버튼 배경·활성 표시 */
+  --accent-hover: #fcd34d; /* amber-300 */
+  --accent-fg: #09090b; /* 포인트 배경 위 글자 */
+  --accent-text: #fbbf24; /* 포인트 색으로 쓰는 글자·아이콘 */
+  --accent-soft: rgba(251, 191, 36, 0.1);
+  --accent-border: rgba(251, 191, 36, 0.6);
+
+  /* 상태 (포인트와 다른 색상 계열로 구분한다) */
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.12);
+  --warning: #fb923c;
+  --warning-soft: rgba(251, 146, 60, 0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --info: #60a5fa;
+  --info-soft: rgba(96, 165, 250, 0.12);
+
+  /* 포커스 */
+  --focus-ring: rgba(251, 191, 36, 0.6);
+
+  /* 그림자는 어두운 배경에서 거의 안 보이므로 테두리와 면으로 입체감을 낸다 */
+  --shadow-card: none;
+  --shadow-pop: 0 20px 50px -12px rgba(0, 0, 0, 0.6);
+}

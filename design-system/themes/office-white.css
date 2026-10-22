@@ -1,0 +1,49 @@
+/* 오피스 화이트 테마 — 팝송영어공부·일상생활영어에서 쓰는 흰 배경 버전(같은 amber 포인트, 옅은 회색 테두리) */
+/* data-theme을 지정하지 않으면 이 테마가 기본으로 적용된다 */
+:root:not([data-theme]),
+[data-theme="office-white"] {
+  color-scheme: light;
+
+  /* 배경과 면 */
+  --bg: #ffffff; /* 페이지 배경 */
+  --bg-subtle: #fafafa; /* zinc-50, 구역을 나눌 때 */
+  --surface: #ffffff; /* 카드 면 (그림자와 테두리로 구분) */
+  --surface-hover: #f4f4f5; /* zinc-100 */
+  --surface-raised: rgba(255, 255, 255, 0.8); /* 떠 있는 패널, 헤더 (뒤가 비치게) */
+  --overlay: rgba(24, 24, 27, 0.4);
+
+  /* 테두리 */
+  --border: #e4e4e7; /* zinc-200 */
+  --border-strong: #d4d4d8; /* zinc-300 */
+
+  /* 글자 */
+  --fg: #18181b; /* zinc-900, 제목 */
+  --fg-body: #3f3f46; /* zinc-700, 본문 */
+  --fg-muted: #66666e; /* 보조 글자. zinc-500보다 약간 진하게 해서 회색 면 위에서도 대비 4.5:1을 넘긴다 */
+  --fg-faint: #8b8b94; /* 비활성·장식 전용(대비 3:1 이상). 읽어야 하는 글자에는 쓰지 않는다 */
+
+  /* 포인트: 버튼 배경에는 amber-400, 흰 배경 위 글자·아이콘에는 대비가 충분한 amber-700 */
+  --accent: #fbbf24; /* amber-400 */
+  --accent-hover: #f59e0b; /* amber-500 */
+  --accent-fg: #09090b; /* 포인트 배경 위 글자 */
+  --accent-text: #b45309; /* amber-700, 흰 배경 위 글자·아이콘 */
+  --accent-soft: #fffbeb; /* amber-50 */
+  --accent-border: rgba(251, 191, 36, 0.6);
+
+  /* 상태 */
+  --success: #15803d;
+  --success-soft: #f0fdf4;
+  --warning: #c2410c;
+  --warning-soft: #fff7ed;
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
+  --info: #1d4ed8;
+  --info-soft: #eff6ff;
+
+  /* 포커스 */
+  --focus-ring: rgba(251, 191, 36, 0.6);
+
+  /* 그림자 */
+  --shadow-card: 0 1px 2px rgba(24, 24, 27, 0.06);
+  --shadow-pop: 0 20px 50px -12px rgba(24, 24, 27, 0.25);
+}

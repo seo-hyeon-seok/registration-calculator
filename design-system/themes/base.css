@@ -1,0 +1,22 @@
+/* 최소 초기화 — 박스 크기 계산과 기본 여백을 맞춘다. Tailwind를 쓰는 프로젝트에서는 같은 내용이라 겹쳐도 문제 없다 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+/* 이미지·영상은 부모 폭을 넘지 않게 */
+img,
+video,
+svg {
+  max-width: 100%;
+}
+
+/* hidden 속성은 항상 숨긴다 (컴포넌트 CSS가 display를 지정해도) */
+[hidden] {
+  display: none !important;
+}

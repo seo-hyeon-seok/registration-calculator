@@ -1,42 +1,39 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="office-brown">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부동산 등기비용 계산기</title>
+    <link rel="stylesheet" href="design-system/themes/index.css">
     <link rel="stylesheet" href="style.css">
     <!-- Daum 우편번호 서비스 -->
     <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-decoration"></div>
-            <h1>부동산 등기비용 계산기</h1>
+    <div class="container ds-container ds-container-narrow">
+        <header class="app-header ds-card ds-card-hero">
+            <h1 class="ds-h1">부동산 등기비용 계산기</h1>
             <p class="subtitle">취득세, 국민주택채권, 법무사 수수료까지 한방에 ~~~</p>
-            <div class="header-particles">
-                <span></span><span></span><span></span><span></span><span></span>
-            </div>
         </header>
 
         <main>
             <!-- 플랫폼 선택 -->
-            <section class="input-section">
-                <h2>1. 플랫폼 선택</h2>
+            <section class="input-section ds-card">
+                <h2 class="ds-h4">1. 플랫폼 선택</h2>
                 <div class="property-type-grid">
-                    <button class="platform-btn active" data-platform="general">
+                    <button class="platform-btn ds-btn ds-btn-secondary active" data-platform="general">
                         <span class="label">일반</span>
                     </button>
-                    <button class="platform-btn" data-platform="master">
+                    <button class="platform-btn ds-btn ds-btn-secondary" data-platform="master">
                         <span class="label">등기마스터</span>
                     </button>
-                    <button class="platform-btn" data-platform="bubtong">
+                    <button class="platform-btn ds-btn ds-btn-secondary" data-platform="bubtong">
                         <span class="label">법무통</span>
                     </button>
                 </div>
                 <!-- 일반 플랫폼 법무사 비용 할인율 -->
                 <div class="option-group lawyer-discount-group" id="lawyerDiscountGroup" style="margin-top: 20px;">
-                    <label>법무사 비용 할인율</label>
+                    <label class="ds-label">법무사 비용 할인율</label>
                     <div class="radio-group discount-radio-group">
                         <label class="radio-label">
                             <input type="radio" name="lawyerDiscount" value="0" checked>
@@ -67,29 +64,29 @@
             </section>
 
             <!-- 부동산 유형 선택 -->
-            <section class="input-section">
-                <h2>2. 부동산 유형 선택</h2>
+            <section class="input-section ds-card">
+                <h2 class="ds-h4">2. 부동산 유형 선택</h2>
                 <div class="property-type-grid">
-                    <button class="property-type-btn active" data-type="apartment">
-                        <span class="icon">🏡</span>
+                    <button class="property-type-btn ds-card ds-card-interactive active" data-type="apartment">
+                        <svg class="ds-icon ds-icon-lg icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                         <span class="label">주택/아파트</span>
                     </button>
-                    <button class="property-type-btn" data-type="commercial">
-                        <span class="icon">🏢</span>
+                    <button class="property-type-btn ds-card ds-card-interactive" data-type="commercial">
+                        <svg class="ds-icon ds-icon-lg icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/></svg>
                         <span class="label">상가/오피스텔</span>
                     </button>
-                    <button class="property-type-btn" data-type="land">
-                        <span class="icon">🌳</span>
+                    <button class="property-type-btn ds-card ds-card-interactive" data-type="land">
+                        <svg class="ds-icon ds-icon-lg icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M7 16v6"/><path d="M13 19v3"/><path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5"/></svg>
                         <span class="label">농지/토지</span>
                     </button>
                 </div>
             </section>
 
             <!-- 주택 추가 옵션 (주택/아파트 선택시만 표시) -->
-            <section class="input-section housing-options" id="housingOptions">
-                <h2>3. 주택 상세 옵션</h2>
+            <section class="input-section ds-card housing-options" id="housingOptions">
+                <h2 class="ds-h4">3. 주택 상세 옵션</h2>
                 <div class="option-group">
-                    <label>보유 주택 수</label>
+                    <label class="ds-label">보유 주택 수</label>
                     <div class="radio-group">
                         <label class="radio-label">
                             <input type="radio" name="houseCount" value="1" checked>
@@ -106,7 +103,7 @@
                     </div>
                 </div>
                 <div class="option-group">
-                    <label>조정대상지역 여부</label>
+                    <label class="ds-label">조정대상지역 여부</label>
                     <div class="radio-group">
                         <label class="radio-label">
                             <input type="radio" name="regulated" value="no" checked>
@@ -119,7 +116,7 @@
                     </div>
                 </div>
                 <div class="option-group">
-                    <label>취득세 감면</label>
+                    <label class="ds-label">취득세 감면</label>
                     <div class="radio-group">
                         <label class="radio-label">
                             <input type="radio" name="taxDiscount" value="none" checked>
@@ -134,7 +131,7 @@
                             <span>신생아 (500만원)</span>
                         </label>
                     </div>
-                    <p id="taxDiscountLimitNotice" class="helper-text" style="display:none; color: var(--warning-color);">※ 매매대금 12억 초과 시 생애최초·신생아 감면이 적용되지 않습니다.</p>
+                    <p id="taxDiscountLimitNotice" class="ds-help" style="display:none; color: var(--warning);">※ 매매대금 12억 초과 시 생애최초·신생아 감면이 적용되지 않습니다.</p>
                 </div>
                 <div class="option-group">
                     <label>
@@ -145,10 +142,10 @@
             </section>
 
             <!-- 토지 추가 옵션 -->
-            <section class="input-section land-options hidden" id="landOptions">
-                <h2>3. 토지 상세 옵션</h2>
+            <section class="input-section ds-card land-options hidden" id="landOptions">
+                <h2 class="ds-h4">3. 토지 상세 옵션</h2>
                 <div class="option-group">
-                    <label>토지 유형</label>
+                    <label class="ds-label">토지 유형</label>
                     <div class="radio-group">
                         <label class="radio-label">
                             <input type="radio" name="landType" value="farm" checked>
@@ -163,11 +160,11 @@
             </section>
 
             <!-- 지역 및 금액 입력 -->
-            <section class="input-section">
-                <h2><span id="sectionNumber">4</span>. 지역 및 금액 정보</h2>
+            <section class="input-section ds-card">
+                <h2 class="ds-h4"><span id="sectionNumber">4</span>. 지역 및 금액 정보</h2>
 
                 <div class="option-group">
-                    <label>지역 선택</label>
+                    <label class="ds-label">지역 선택</label>
                     <div class="radio-group">
                         <label class="radio-label">
                             <input type="radio" name="region" value="metro">
@@ -181,88 +178,88 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="clientName">고객 이름</label>
-                    <input type="text" id="clientName" placeholder="예: 홍길동">
+                    <label class="ds-label" for="clientName">고객 이름</label>
+                    <input type="text" class="ds-input" id="clientName" placeholder="예: 홍길동">
                 </div>
 
                 <div class="form-group">
-                    <label for="caseName">사건명</label>
-                    <input type="text" id="caseName" placeholder="예: 소유권이전" value="소유권이전">
+                    <label class="ds-label" for="caseName">사건명</label>
+                    <input type="text" class="ds-input" id="caseName" placeholder="예: 소유권이전" value="소유권이전">
                 </div>
 
                 <div class="form-group">
-                    <label for="address">부동산 주소</label>
+                    <label class="ds-label" for="address">부동산 주소</label>
                     <div class="input-with-button">
-                        <input type="text" id="address" placeholder="예: 서울시 강남구 역삼동 123-45">
-                        <button type="button" class="search-btn" id="searchAddressBtn">찾기</button>
+                        <input type="text" class="ds-input" id="address" placeholder="예: 서울시 강남구 역삼동 123-45">
+                        <button type="button" class="search-btn ds-btn ds-btn-secondary" id="searchAddressBtn">찾기</button>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="salePrice">매매대금 (원)</label>
-                    <input type="text" id="salePrice" placeholder="예: 500,000,000" inputmode="numeric">
+                    <label class="ds-label" for="salePrice">매매대금 (원)</label>
+                    <input type="text" class="ds-input" id="salePrice" placeholder="예: 500,000,000" inputmode="numeric">
                     <span class="price-korean" id="salePriceKorean"></span>
                 </div>
 
                 <div class="form-group">
-                    <label for="standardPrice">시가표준액 (공시지가/공시가격) (원)</label>
+                    <label class="ds-label" for="standardPrice">시가표준액 (공시지가/공시가격) (원)</label>
                     <div class="input-with-button">
-                        <input type="text" id="standardPrice" placeholder="예: 400,000,000" inputmode="numeric">
-                        <button type="button" class="search-btn" id="searchStandardPriceBtn">찾기</button>
+                        <input type="text" class="ds-input" id="standardPrice" placeholder="예: 400,000,000" inputmode="numeric">
+                        <button type="button" class="search-btn ds-btn ds-btn-secondary" id="searchStandardPriceBtn">찾기</button>
                     </div>
                     <span class="price-korean" id="standardPriceKorean"></span>
-                    <p class="helper-text">
+                    <p class="ds-help">
                         * 시가표준액을 모르시면 매매대금의 70~80% 수준으로 입력하세요.
                     </p>
                 </div>
 
                 <div class="form-group">
-                    <label>공동명의 / 다대사건</label>
-                    <div style="background:#f0ebe2; border:1px solid #d4c4a8; border-radius:10px; padding:14px 16px; display:flex; flex-direction:column; gap:12px;">
+                    <label class="ds-label">공동명의 / 다대사건</label>
+                    <div class="co-owner-box">
 
                         <!-- 매수인 수 -->
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <span style="font-size:14px; color:var(--text-secondary); white-space:nowrap; min-width:60px;">매수인 수</span>
-                            <input type="number" id="buyerCount" value="1" min="1" max="10" style="flex:1;">
+                        <div class="co-owner-row">
+                            <label class="co-owner-label" for="buyerCount">매수인 수</label>
+                            <input type="number" class="ds-input" id="buyerCount" value="1" min="1" max="10">
                         </div>
 
-                        <div style="border-top:1px solid #d4c4a8;"></div>
+                        <hr class="ds-divider">
 
                         <!-- 다대사건 -->
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
-                            <input type="checkbox" id="dadaeCheckbox" style="width:16px; height:16px; accent-color:var(--accent-color); cursor:pointer; flex-shrink:0;">
-                            <span style="font-size:14px; color:var(--text-primary);">다대사건 <span style="font-size:12px; color:var(--text-secondary);">(매도인 & 매수인 2명 이상 — 증지대 2배)</span></span>
+                        <label class="dadae-label">
+                            <input type="checkbox" id="dadaeCheckbox">
+                            <span>다대사건 <span class="dadae-note">(매도인 & 매수인 2명 이상 — 증지대 2배)</span></span>
                         </label>
 
                         <!-- 매수인별 지분 입력 (공동명의 2인 이상 시 표시) -->
-                        <div id="buyerSharesContainer" style="display:none; border-top:1px solid #d4c4a8; padding-top:12px;">
-                            <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">매수인별 지분율을 입력하세요.</p>
+                        <div id="buyerSharesContainer" class="buyer-shares" style="display:none;">
+                            <p class="buyer-shares-title">매수인별 지분율을 입력하세요.</p>
                             <div id="buyerSharesList"></div>
                         </div>
 
                     </div>
-                    <p class="helper-text">* 공동명의 시 인원수만큼 채권매입률이 각각 적용됩니다.</p>
+                    <p class="ds-help">* 공동명의 시 인원수만큼 채권매입률이 각각 적용됩니다.</p>
                 </div>
 
                 <div class="form-group">
-                    <label for="bondRate">오늘의 채권할인율 (%)</label>
+                    <label class="ds-label" for="bondRate">오늘의 채권할인율 (%)</label>
                     <div class="input-with-button">
-                        <input type="text" id="bondRate" value="11.8" placeholder="예: 11.8">
-                        <button type="button" class="search-btn" id="searchBondRateBtn">찾기</button>
+                        <input type="text" class="ds-input" id="bondRate" value="11.8" placeholder="예: 11.8">
+                        <button type="button" class="search-btn ds-btn ds-btn-secondary" id="searchBondRateBtn">찾기</button>
                     </div>
-                    <p class="helper-text">
+                    <p class="ds-help">
                         * 채권할인율은 매일 변동됩니다.
                     </p>
                 </div>
 
                 <div class="form-group">
-                    <label for="transportFee">일당 및 교통비 (원)</label>
-                    <input type="text" id="transportFee" value="30,000" placeholder="예: 30,000" inputmode="numeric">
+                    <label class="ds-label" for="transportFee">일당 및 교통비 (원)</label>
+                    <input type="text" class="ds-input" id="transportFee" value="30,000" placeholder="예: 30,000" inputmode="numeric">
                 </div>
             </section>
 
             <!-- 계산 버튼 -->
-            <button class="calculate-btn" id="calculateBtn">
+            <button class="calculate-btn ds-btn ds-btn-primary ds-btn-lg" id="calculateBtn">
                 등기비용 계산하기
             </button>
 
@@ -271,7 +268,7 @@
                 <h2>등기비용 견적 결과</h2>
 
                 <!-- 취득세 -->
-                <div class="result-card">
+                <div class="result-card ds-card">
                     <div class="result-header">
                         <h3>취득세 관련</h3>
                         <span class="result-total" id="acquisitionTaxTotal">0원</span>
@@ -294,7 +291,7 @@
                 </div>
 
                 <!-- 국민주택채권 -->
-                <div class="result-card">
+                <div class="result-card ds-card">
                     <div class="result-header">
                         <h3>국민주택채권</h3>
                         <span class="result-total" id="bondTotal">0원</span>
@@ -316,7 +313,7 @@
                 </div>
 
                 <!-- 기타 비용 -->
-                <div class="result-card">
+                <div class="result-card ds-card">
                     <div class="result-header">
                         <h3>기타 비용</h3>
                         <span class="result-total" id="otherTotal">0원</span>
@@ -367,7 +364,7 @@
                 </div>
 
                 <!-- 총 비용 -->
-                <div class="result-card total-card">
+                <div class="result-card ds-card total-card">
                     <div class="result-header">
                         <h3>총 등기비용</h3>
                         <span class="result-total grand-total" id="grandTotal">0원</span>
@@ -390,13 +387,13 @@
 
                 <!-- 복사 버튼 -->
                 <div class="copy-buttons">
-                    <button class="copy-btn" id="copyAllBtn">전체 결과 복사</button>
-                    <button class="copy-btn secondary" id="copyForMasterBtn">등기마스터용 복사</button>
-                    <button class="copy-btn secondary" id="copyForBubtongBtn">법무통용 복사</button>
-                    <button class="copy-btn receipt-btn" id="printReceiptBtn">영수증 출력</button>
+                    <button class="copy-btn ds-btn ds-btn-secondary" id="copyAllBtn">전체 결과 복사</button>
+                    <button class="copy-btn ds-btn ds-btn-secondary" id="copyForMasterBtn">등기마스터용 복사</button>
+                    <button class="copy-btn ds-btn ds-btn-secondary" id="copyForBubtongBtn">법무통용 복사</button>
+                    <button class="copy-btn ds-btn ds-btn-secondary" id="printReceiptBtn">영수증 출력</button>
                 </div>
 
-                <div class="disclaimer">
+                <div class="disclaimer ds-alert ds-alert-warning">
                     <p><strong>※ 주의사항</strong></p>
                     <ul>
                         <li>본 계산 결과는 예상 금액이며, 실제 비용과 차이가 있을 수 있습니다.</li>

@@ -958,7 +958,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (taxDiscountRadio && taxDiscountRadio.value !== 'none' && result.salePrice > 1200000000) {
             const discountLabel = taxDiscountRadio.value === 'firstTime' ? '생애최초감면' : '신생아감면';
             const noticeText = `※ 매매대금 12억 초과로 ${discountLabel}이 적용되지 않았습니다.`;
-            taxNoteHtml += (taxNoteHtml ? ' ' : '') + `<span style="color:#e53935;">${noticeText}</span>`;
+            taxNoteHtml += (taxNoteHtml ? ' ' : '') + `<span style="color:var(--danger);">${noticeText}</span>`;
         }
         taxNoteEl.innerHTML = taxNoteHtml;
 
@@ -1377,13 +1377,12 @@ function saveImage() {
             const isLast = i === count - 1;
             const defaultVal = isLast ? Math.round((100 - equalShare * (count - 1)) * 10) / 10 : equalShare;
             const cell = document.createElement('div');
-            cell.style.cssText = 'display:flex; align-items:center; gap:6px;';
+            cell.className = 'share-cell';
             cell.innerHTML = `
-                <span style="font-size:14px; color:var(--text-primary); white-space:nowrap;">매수인${i + 1}</span>
-                <input type="number" id="buyerShare_pct_${i}" value="${defaultVal}" min="0" max="100" step="0.1"
-                    ${isLast ? 'readonly' : ''}
-                    style="width:70px; text-align:center; border:1px solid #c8b89a; border-radius:6px; padding:5px; font-size:14px;${isLast ? ' background:#f0ebe2; color:var(--text-secondary);' : ''}">
-                <span style="font-size:14px; color:var(--text-secondary);">%</span>
+                <span>매수인${i + 1}</span>
+                <input type="number" class="ds-input share-input" id="buyerShare_pct_${i}" value="${defaultVal}" min="0" max="100" step="0.1"
+                    ${isLast ? 'readonly' : ''}>
+                <span>%</span>
             `;
             buyerSharesList.appendChild(cell);
         }

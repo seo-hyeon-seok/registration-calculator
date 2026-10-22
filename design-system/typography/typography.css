@@ -1,0 +1,73 @@
+/* 글꼴과 글자 크기 체계 — Pretendard 한 가족으로 굵기와 크기로 위계를 만든다 */
+
+/* 글꼴 파일. 오프라인이나 사내망에서 쓰려면 이 줄을 지우고 Pretendard 파일을 프로젝트에 직접 넣는다 */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css");
+
+:root {
+  --font-sans: "Pretendard", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+
+  /* 글자 크기 (rem). 이름은 Tailwind와 같다 */
+  --text-xs: 0.75rem; /* 12px, 캡션·배지 */
+  --text-sm: 0.875rem; /* 14px, 보조 글자 */
+  --text-base: 1rem; /* 16px, 본문 */
+  --text-lg: 1.125rem; /* 18px, 강조 본문 */
+  --text-xl: 1.25rem; /* 20px, 작은 제목 */
+  --text-2xl: 1.5rem; /* 24px, 카드 제목 */
+  --text-3xl: 1.875rem; /* 30px, 구역 제목 */
+  --text-4xl: 2.25rem; /* 36px, 페이지 제목 */
+  --text-5xl: 3rem; /* 48px, 큰 제목 */
+  --text-6xl: 3.75rem; /* 60px, 첫 화면 제목 */
+
+  /* 줄 간격 */
+  --leading-tight: 1.2; /* 큰 제목 */
+  --leading-snug: 1.35; /* 제목 */
+  --leading-normal: 1.6; /* 본문(한글은 영문보다 넉넉하게) */
+
+  /* 굵기 */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* 자간 */
+  --tracking-tight: -0.02em; /* 큰 제목 */
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em; /* 영문 대문자 라벨 */
+}
+
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  /* 한글은 단어 중간에서 줄이 바뀌지 않게 한다 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 제목 위계. 크기보다 굵기와 줄 간격으로 구분하고, 큰 제목은 자간을 살짝 좁힌다 */
+.ds-display { font-size: var(--text-5xl); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); }
+.ds-h1 { font-size: var(--text-4xl); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); }
+.ds-h2 { font-size: var(--text-3xl); font-weight: var(--weight-bold); line-height: var(--leading-snug); letter-spacing: var(--tracking-tight); }
+.ds-h3 { font-size: var(--text-2xl); font-weight: var(--weight-semibold); line-height: var(--leading-snug); }
+.ds-h4 { font-size: var(--text-xl); font-weight: var(--weight-semibold); line-height: var(--leading-snug); }
+.ds-body { font-size: var(--text-base); line-height: var(--leading-normal); }
+.ds-body-lg { font-size: var(--text-lg); line-height: var(--leading-normal); }
+.ds-small { font-size: var(--text-sm); line-height: var(--leading-normal); color: var(--fg-muted); }
+.ds-caption { font-size: var(--text-xs); line-height: var(--leading-normal); color: var(--fg-muted); }
+.ds-eyebrow { font-size: var(--text-xs); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--accent-text); }
+.ds-mono { font-family: var(--font-mono); }
+
+/* 숫자가 세로로 정렬되는 표·통계에는 같은 폭의 숫자를 쓴다 */
+.ds-tabular { font-variant-numeric: tabular-nums; }
+
+/* 모바일에서는 큰 제목을 한 단계 줄인다 */
+@media (max-width: 640px) {
+  .ds-display { font-size: var(--text-4xl); }
+  .ds-h1 { font-size: var(--text-3xl); }
+  .ds-h2 { font-size: var(--text-2xl); }
+}

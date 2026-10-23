@@ -589,7 +589,7 @@ input:disabled {
 }
 
 .total-card .result-header {
-    border-bottom-color: var(--accent-border);
+    border-bottom-color: #5a4d40;
 }
 
 .total-card .result-header h3 {

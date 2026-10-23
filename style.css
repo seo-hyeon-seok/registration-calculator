@@ -15,7 +15,7 @@
     --hover-bg: #fcd34d;
     --hover-fg: #111111;
     --field-bg: #f4f4f5;
-    --field-border: var(--border-strong);
+    --field-border: var(--border);
     --field-ring: rgba(138, 115, 82, 0.35);
     --focus-ring: rgba(138, 115, 82, 0.35);
 }

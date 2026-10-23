@@ -16,6 +16,7 @@
     --hover-fg: #111111;
     --field-bg: #f4f4f5;
     --field-border: var(--border);
+    --line-soft: #e8e8ea;
     --field-ring: rgba(138, 115, 82, 0.35);
     --focus-ring: rgba(138, 115, 82, 0.35);
 }
@@ -427,7 +428,7 @@ body {
     align-items: center;
     padding-bottom: var(--space-4);
     margin-bottom: var(--space-4);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--line-soft);
 }
 
 .result-header h3 {
@@ -454,7 +455,7 @@ body {
     gap: var(--space-3);
     padding: var(--space-2) 0;
     font-size: var(--text-sm);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--line-soft);
 }
 
 .result-row:last-child {
@@ -574,7 +575,7 @@ input:disabled {
 .result-note {
     margin-top: var(--space-3);
     padding-top: var(--space-4);
-    border-top: 1px dashed var(--border);
+    border-top: 1px dashed var(--line-soft);
     font-size: var(--text-xs);
     color: var(--fg-muted);
     font-style: italic;

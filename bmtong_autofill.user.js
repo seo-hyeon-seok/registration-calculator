@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         법무통 견적서 자동채움
 // @namespace    https://seo-hyeon-seok.github.io/registration-calculator/
-// @version      1.3
+// @version      1.4
 // @description  등기비용 계산기의 "법무통용 복사" 클립보드 값을 법무통 견적서 입력폼에 자동으로 채워줍니다 (채권은 시가표준액이 조회된 경우에만 채움, 제출은 직접)
 // @match        https://www.bmtong.co.kr/partner/estimates/*
 // @match        https://bmtong.co.kr/partner/estimates/*
@@ -17,22 +17,25 @@
 
     // 이름(name)·적용세율(rateNote)은 계산기의 "법무통용 복사" 값(클립보드 8, 9번째 필드)에서 채워짐
     function buildMemoText(name, rateNote) {
-        const greeting = name ? `안녕하세요. ${name}님, 최병섭 법무사 사무실입니다.` : '안녕하세요. 최병섭 법무사 사무실입니다.';
-        const rateLine = rateNote ? `\n■ ${name ? name + '님 ' : ''}적용세율 : ${rateNote}` : '';
+        const greeting = name ? `안녕하세요, ${name}님. 최병섭 법무사 사무실입니다.` : '안녕하세요, 최병섭 법무사 사무실입니다.';
+        const rateBlock = rateNote ? `■ ${name ? name + '님 ' : ''}적용 세율\n${rateNote}\n\n` : '';
         return `${greeting}
 
-■ 등기비용《상담•문의》 010-3971-7708${rateLine}
+${rateBlock}■ 안내
+· 잔금일 당일, 해당 부동산으로 방문합니다.
+· 추가 비용은 없으며, 채권 금액만 당일 시세에 따라 소폭 변동될 수 있습니다.
+· 견적 채택만으로는 예약되지 않습니다. (전화 또는 문자로 꼭! 연락 주세요.)
 
-■ 잔금일 당일 해당 부동산으로  방문합니다.
-■ 추가비용 없이,  당일 시세 채권만 포함되어 진행됩니다.
-■ 견적채택은  예약이 아닙니다. (전화, 문자로 해주셔야 합니다.)
+■ 진행 순서
+① 서류 업로드 → ② 계약금 입금 → ③ 서류 검토·작업 → ④ 잔금일 등기 접수
 
-■ 채권포함 상세견적을 받아보고 싶으시면
-    https://registry-form-ten.vercel.app/
-    링크주소로 계약서, 부동산 신고필증 업로드 해주시면 발송해 드립니다.
+■ 서류 업로드
+https://registry-form-ten.vercel.app/
+매매계약서, 부동산 거래신고필증을 올려주시면 서류 검토 및 작업에 들어갑니다.
 
-등기 관련 문의는 편하게 연락 주세요.
-010-3971-7708`;
+■ 문의
+홈페이지: https://choilaw.netlify.app/
+전화: 010-3971-7708`;
     }
 
     function setReactInputValue(input, value) {

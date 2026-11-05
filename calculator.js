@@ -953,6 +953,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 취득세
         document.getElementById('acquisitionTax').textContent = formatNumber(result.acquisition.acquisitionTax) + '원';
+        document.getElementById('acquisitionTaxLabel').textContent = `취득세 (${parseFloat((result.acquisition.taxRate * 100).toFixed(2))}%)`;
         document.getElementById('educationTax').textContent = formatNumber(result.acquisition.educationTax) + '원';
         document.getElementById('ruralTax').textContent = formatNumber(result.acquisition.ruralTax) + '원';
         document.getElementById('acquisitionTaxTotal').textContent = formatNumber(result.acquisition.total) + '원';
@@ -1103,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const text = `[등기비용 견적]
 
-취득세: ${formatNumber(lastResult.acquisition.acquisitionTax)}원
+취득세(${parseFloat((lastResult.acquisition.taxRate * 100).toFixed(2))}%): ${formatNumber(lastResult.acquisition.acquisitionTax)}원
 지방교육세: ${formatNumber(lastResult.acquisition.educationTax)}원
 농어촌특별세: ${formatNumber(lastResult.acquisition.ruralTax)}원
 소계: ${formatNumber(lastResult.acquisition.total)}원
@@ -1276,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <div class="section-title">취득세 및 등기신청 관련</div>
   <table class="detail-table">
-    <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">취득세${r.acquisition.acquisitionDiscount > 0 ? ` <span style="color:#c0392b;font-size:11px;">(${r.acquisition.discountLabel} -${formatNumber(r.acquisition.acquisitionDiscount)}원 적용)</span>` : ''}</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.acquisitionTax)}원</td></tr>
+    <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">취득세 (${parseFloat((r.acquisition.taxRate * 100).toFixed(2))}%)${r.acquisition.acquisitionDiscount > 0 ? ` <span style="color:#c0392b;font-size:11px;">(${r.acquisition.discountLabel} -${formatNumber(r.acquisition.acquisitionDiscount)}원 적용)</span>` : ''}</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.acquisitionTax)}원</td></tr>
     <tr><td class="label" style="border-bottom:1px solid #e0d6c8;">지방교육세${r.acquisition.educationDiscount > 0 ? ` <span style="color:#c0392b;font-size:11px;">(${r.acquisition.discountLabel} -${formatNumber(r.acquisition.educationDiscount)}원 적용)</span>` : ''}</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.educationTax)}원</td></tr>
     ${r.acquisition.ruralTax > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">농어촌특별세</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.acquisition.ruralTax)}원</td></tr>` : ''}
     ${r.stampTax > 0 ? `<tr><td class="label" style="border-bottom:1px solid #e0d6c8;">인지대</td><td class="right" style="border-bottom:1px solid #e0d6c8;">${formatNumber(r.stampTax)}원</td></tr>` : ''}

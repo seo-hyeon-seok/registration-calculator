@@ -206,7 +206,26 @@
                     <span class="price-korean" id="salePriceKorean"></span>
                 </div>
 
-                <div class="form-group">
+                <!-- 상가/오피스텔 시가표준액 (건물 + 토지, 상가/오피스텔 유형에서만 표시) -->
+                <div class="form-group hidden" id="commercialPriceGroup">
+                    <label class="ds-label" for="buildingPrice">건물 시가표준액 (원)</label>
+                    <input type="text" class="ds-input" id="buildingPrice" placeholder="예: 26,811,537" inputmode="numeric">
+                    <span class="price-korean" id="buildingPriceKorean"></span>
+
+                    <label class="ds-label" for="landArea" style="margin-top: 12px;">토지 면적 (㎡)</label>
+                    <input type="text" class="ds-input" id="landArea" placeholder="예: 8.88" inputmode="decimal">
+
+                    <label class="ds-label" for="landUnitPrice" style="margin-top: 12px;">토지 공시지가 (원/㎡)</label>
+                    <input type="text" class="ds-input" id="landUnitPrice" placeholder="예: 12,510,000" inputmode="numeric">
+
+                    <label class="ds-label" style="margin-top: 12px;">토지 가격 (면적 × 공시지가)</label>
+                    <div class="ds-input" id="landPriceDisplay" aria-live="polite">0원</div>
+
+                    <label class="ds-label" style="margin-top: 12px;">시가표준액 합계 (건물 + 토지)</label>
+                    <div class="ds-input" id="commercialTotalDisplay" aria-live="polite">0원</div>
+                </div>
+
+                <div class="form-group" id="standardPriceGroup">
                     <label class="ds-label" for="standardPrice">시가표준액 (공시지가/공시가격) (원)</label>
                     <div class="input-with-button">
                         <input type="text" class="ds-input" id="standardPrice" placeholder="예: 400,000,000" inputmode="numeric">

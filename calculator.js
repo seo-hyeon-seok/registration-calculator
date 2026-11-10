@@ -58,14 +58,6 @@ const BOND_RATES_METRO = {
         { min: 30000000, max: 50000000, rate: 0.013 },
         { min: 50000000, max: 100000000, rate: 0.015 },
         { min: 100000000, max: Infinity, rate: 0.017 }
-    ],
-    commercial: [
-        { min: 0, max: 10000000, rate: 0 },           // 1천만 미만 면제
-        { min: 10000000, max: 50000000, rate: 0.012 },
-        { min: 50000000, max: 100000000, rate: 0.014 },
-        { min: 100000000, max: 300000000, rate: 0.016 },
-        { min: 300000000, max: 500000000, rate: 0.018 },
-        { min: 500000000, max: Infinity, rate: 0.020 }
     ]
 };
 
@@ -86,14 +78,22 @@ const BOND_RATES_OTHER = {
         { min: 30000000, max: 50000000, rate: 0.011 },
         { min: 50000000, max: 100000000, rate: 0.013 },
         { min: 100000000, max: Infinity, rate: 0.015 }
+    ]
+};
+
+// 상가/오피스텔 국민주택채권 매입률 (사무실 엑셀 기준, 지역 구분 없음, 건물·토지 따로 계산)
+const BOND_RATES_COMMERCIAL = {
+    building: [
+        { min: 0, max: 10000000, rate: 0 },           // 1천만 미만 면제
+        { min: 10000000, max: 130000000, rate: 0.008 },
+        { min: 130000000, max: 250000000, rate: 0.014 },
+        { min: 250000000, max: Infinity, rate: 0.018 }
     ],
-    commercial: [
-        { min: 0, max: 10000000, rate: 0 },
-        { min: 10000000, max: 50000000, rate: 0.010 },
-        { min: 50000000, max: 100000000, rate: 0.012 },
-        { min: 100000000, max: 300000000, rate: 0.014 },
-        { min: 300000000, max: 500000000, rate: 0.016 },
-        { min: 500000000, max: Infinity, rate: 0.018 }
+    land: [
+        { min: 0, max: 5000000, rate: 0 },            // 500만 미만 면제
+        { min: 5000000, max: 50000000, rate: 0.02 },
+        { min: 50000000, max: 100000000, rate: 0.035 },
+        { min: 100000000, max: Infinity, rate: 0.045 }
     ]
 };
 
@@ -401,7 +401,7 @@ function calculateAcquisitionTax(params) {
  * 국민주택채권 매입액 계산
  */
 function calculateBond(params) {
-    const { propertyType, standardPrice, region, bondDiscountRate, buyerCount = 1, buyerShares = [] } = params;
+    const { propertyType, standardPrice, buildingPrice = 0, landPrice = 0, region, bondDiscountRate, buyerCount = 1, buyerShares = [] } = params;
 
     // 시가표준액이 없으면 채권 계산 건너뜀
     if (!standardPrice || standardPrice === 0) {
@@ -421,18 +421,31 @@ function calculateBond(params) {
     let typeKey = propertyType;
     if (propertyType === 'apartment') typeKey = 'housing';
 
-    const rates = bondRates[typeKey] || bondRates.commercial;
+    // 채권 계산 대상 목록 (상가/오피스텔은 건물·토지를 각각 다른 요율로 계산)
+    const components = propertyType === 'commercial'
+        ? [
+            { price: buildingPrice, rates: BOND_RATES_COMMERCIAL.building },
+            { price: landPrice, rates: BOND_RATES_COMMERCIAL.land }
+        ]
+        : [{ price: standardPrice, rates: bondRates[typeKey] }];
 
-    // 지분별 채권 계산 함수
-    function bondForPrice(price) {
+    // 지분별 채권 계산 함수 (대상별 만원 단위 반올림 후 합산)
+    function bondForPrice(ratio) {
+        let amount = 0;
         let rate = 0;
-        for (const bracket of rates) {
-            if (price >= bracket.min && price < bracket.max) {
-                rate = bracket.rate;
-                break;
+        for (const comp of components) {
+            const price = comp.price * ratio;
+            let compRate = 0;
+            for (const bracket of comp.rates) {
+                if (price >= bracket.min && price < bracket.max) {
+                    compRate = bracket.rate;
+                    break;
+                }
             }
+            amount += roundToTenThousand(price * compRate);
+            rate = compRate;
         }
-        return { amount: roundToTenThousand(price * rate), rate };
+        return { amount, rate };
     }
 
     let bondAmount = 0;
@@ -442,18 +455,21 @@ function calculateBond(params) {
         // 각 매수인 지분에 따라 과세표준 분할 후 개별 계산
         for (const share of buyerShares) {
             const ratio = share.denominator > 0 ? share.numerator / share.denominator : 1 / buyerCount;
-            const priceForBuyer = standardPrice * ratio;
-            const result = bondForPrice(priceForBuyer);
-            bondAmount += result.amount;
+            bondAmount += bondForPrice(ratio).amount;
         }
         // 표시용 대표 요율 (1인 기준)
-        bondRate = bondForPrice(standardPrice * (buyerShares[0].denominator > 0 ? buyerShares[0].numerator / buyerShares[0].denominator : 1 / buyerCount)).rate;
+        const first = buyerShares[0];
+        bondRate = bondForPrice(first.denominator > 0 ? first.numerator / first.denominator : 1 / buyerCount).rate;
     } else {
         // 1인 또는 지분 미입력: 균등 분할
-        const pricePerBuyer = standardPrice / buyerCount;
-        const result = bondForPrice(pricePerBuyer);
+        const result = bondForPrice(1 / buyerCount);
         bondAmount = result.amount * buyerCount;
         bondRate = result.rate;
+    }
+
+    // 상가/오피스텔은 요율이 둘이라 실효 매입률(채권매입액/시가표준액)을 표시
+    if (propertyType === 'commercial') {
+        bondRate = bondAmount / standardPrice;
     }
 
     // 할인매도시 실제 부담액
@@ -705,6 +721,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const sectionNumber = document.getElementById('sectionNumber');
     const salePriceInput = document.getElementById('salePrice');
     const standardPriceInput = document.getElementById('standardPrice');
+    const standardPriceGroup = document.getElementById('standardPriceGroup');
+    const commercialPriceGroup = document.getElementById('commercialPriceGroup');
+    const buildingPriceInput = document.getElementById('buildingPrice');
+    const landAreaInput = document.getElementById('landArea');
+    const landUnitPriceInput = document.getElementById('landUnitPrice');
     const bondRateInput = document.getElementById('bondRate');
     const calculateBtn = document.getElementById('calculateBtn');
     const resultSection = document.getElementById('resultSection');
@@ -839,6 +860,12 @@ document.addEventListener('DOMContentLoaded', function() {
             landOptions.classList.toggle('hidden', currentPropertyType !== 'land');
             document.getElementById('aptLookup').classList.toggle('hidden', currentPropertyType !== 'apartment' || !window.VWORLD_KEY);
 
+            // 상가/오피스텔은 건물·토지 따로 입력 (합계가 시가표준액 칸에 들어감)
+            const isCommercial = currentPropertyType === 'commercial';
+            commercialPriceGroup.classList.toggle('hidden', !isCommercial);
+            standardPriceGroup.classList.toggle('hidden', isCommercial);
+            if (isCommercial) updateCommercialPrice();
+
             // 섹션 번호 업데이트
             sectionNumber.textContent = (currentPropertyType === 'apartment' || currentPropertyType === 'land') ? '4' : '3';
         });
@@ -859,6 +886,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     handlePriceInput(salePriceInput, 'salePriceKorean');
     handlePriceInput(standardPriceInput, 'standardPriceKorean');
+    handlePriceInput(buildingPriceInput, 'buildingPriceKorean');
+
+    // 상가/오피스텔 토지 가격(면적 x 공시지가)과 시가표준액 합계 계산
+    function getLandPrice() {
+        const area = parseFloat(landAreaInput.value.replace(/[^0-9.]/g, '')) || 0;
+        return Math.round(area * parseInputNumber(landUnitPriceInput.value));
+    }
+
+    function updateCommercialPrice() {
+        const landPrice = getLandPrice();
+        const total = parseInputNumber(buildingPriceInput.value) + landPrice;
+        document.getElementById('landPriceDisplay').textContent = formatNumber(landPrice) + '원';
+        document.getElementById('commercialTotalDisplay').textContent = formatNumber(total) + '원';
+        standardPriceInput.value = total > 0 ? formatNumber(total) : '';
+        standardPriceInput.dispatchEvent(new Event('input'));
+    }
+
+    buildingPriceInput.addEventListener('input', updateCommercialPrice);
+    landAreaInput.addEventListener('input', updateCommercialPrice);
+    landUnitPriceInput.addEventListener('input', function() {
+        const value = parseInputNumber(this.value);
+        this.value = value > 0 ? formatNumber(value) : '';
+        updateCommercialPrice();
+    });
 
     // 매매대금 12억 초과 시 감면 안내 메세지 표시
     const taxDiscountLimitNotice = document.getElementById('taxDiscountLimitNotice');
@@ -918,6 +969,8 @@ document.addEventListener('DOMContentLoaded', function() {
             propertyType: currentPropertyType,
             salePrice: salePrice,
             standardPrice: standardPrice,
+            buildingPrice: parseInputNumber(buildingPriceInput.value),
+            landPrice: getLandPrice(),
             region: regionRadio ? regionRadio.value : 'other',
             houseCount: houseCountRadio ? parseInt(houseCountRadio.value) : 1,
             isRegulated: regulatedRadio ? regulatedRadio.value === 'yes' : false,

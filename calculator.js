@@ -1532,6 +1532,62 @@ function saveImage() {
         return [];
     }
 
+    // ===== 상가/오피스텔 토지 공시지가 조회 (브이월드 개별공시지가) =====
+    const landLookupBtn = document.getElementById('landLookupBtn');
+    const landLookupMsg = document.getElementById('landLookupMsg');
+    if (!window.VWORLD_KEY) landLookupBtn.classList.add('hidden');
+
+    function showLandMsg(text, type) {
+        landLookupMsg.textContent = text;
+        landLookupMsg.classList.toggle('error', type === 'error');
+        landLookupMsg.classList.toggle('ok', type === 'ok');
+    }
+
+    // 공시지가는 1월 1일 기준으로 공시되므로 올해 → 전년 순서로 찾는다
+    async function fetchLandPrice(pnu, key) {
+        const thisYear = new Date().getFullYear();
+        for (const year of [thisYear, thisYear - 1]) {
+            const url = 'https://api.vworld.kr/ned/data/getIndvdLandPriceAttr?format=json&numOfRows=10&pageNo=1'
+                + '&key=' + key + '&domain=' + VWORLD_DOMAIN + '&pnu=' + pnu + '&stdrYear=' + year;
+            const data = await vworldJsonp(url);
+            const res = data.indvdLandPrices;
+            if (res && Array.isArray(res.field) && res.field.length) {
+                // 같은 해 정정 공시가 있으면 마지막 갱신분을 쓴다
+                const latest = res.field.reduce((a, b) => (b.lastUpdtDt > a.lastUpdtDt ? b : a));
+                return { year, price: Number(latest.pblntfPclnd) };
+            }
+            if (res && res.resultCode === 'INCORRECT_KEY') throw new Error('인증키 정보가 올바르지 않습니다.');
+        }
+        return null;
+    }
+
+    landLookupBtn.addEventListener('click', async function() {
+        const key = window.VWORLD_KEY;
+        const address = (addressInput.dataset.jibun || addressInput.value.replace(/\s*\(.*\)\s*$/, '')).trim();
+        if (!address) { showLandMsg('부동산 주소를 먼저 입력해 주세요.', 'error'); return; }
+
+        landLookupBtn.disabled = true;
+        showLandMsg('공시지가를 조회하는 중입니다...');
+        try {
+            const pnu = await findPnu(address, key);
+            if (!pnu) { showLandMsg('주소를 찾지 못했습니다. 주소 찾기 버튼으로 다시 선택해 주세요.', 'error'); return; }
+            const found = await fetchLandPrice(pnu, key);
+            if (!found) { showLandMsg('해당 필지의 개별공시지가를 찾지 못했습니다.', 'error'); return; }
+            landUnitPriceInput.value = formatNumber(found.price);
+            updateCommercialPrice();
+            showLandMsg(found.year + '년 개별공시지가 ' + formatNumber(found.price) + '원/㎡ · 토지 면적은 직접 입력해 주세요.', 'ok');
+        } catch (e) {
+            showLandMsg(e.message || '조회 중 오류가 발생했습니다.', 'error');
+        } finally {
+            landLookupBtn.disabled = false;
+        }
+    });
+
+    // 건물 시가표준액은 공개 API가 없어 위택스 조회 화면을 연다
+    document.getElementById('searchBuildingPriceBtn').addEventListener('click', function() {
+        window.open('https://www.wetax.go.kr/tcp/loi/J030401M01.do', '_blank');
+    });
+
     function showAptMsg(text, type) {
         aptLookupMsg.textContent = text;
         aptLookupMsg.classList.toggle('error', type === 'error');

@@ -209,14 +209,21 @@
                 <!-- 상가/오피스텔 시가표준액 (건물 + 토지, 상가/오피스텔 유형에서만 표시) -->
                 <div class="form-group hidden" id="commercialPriceGroup">
                     <label class="ds-label" for="buildingPrice">건물 시가표준액 (원)</label>
-                    <input type="text" class="ds-input" id="buildingPrice" placeholder="예: 26,811,537" inputmode="numeric">
+                    <div class="input-with-button">
+                        <input type="text" class="ds-input" id="buildingPrice" placeholder="예: 26,811,537" inputmode="numeric">
+                        <button type="button" class="search-btn ds-btn ds-btn-secondary" id="searchBuildingPriceBtn">찾기</button>
+                    </div>
                     <span class="price-korean" id="buildingPriceKorean"></span>
 
                     <label class="ds-label" for="landArea" style="margin-top: 12px;">토지 면적 (㎡)</label>
                     <input type="text" class="ds-input" id="landArea" placeholder="예: 8.88" inputmode="decimal">
 
                     <label class="ds-label" for="landUnitPrice" style="margin-top: 12px;">토지 공시지가 (원/㎡)</label>
-                    <input type="text" class="ds-input" id="landUnitPrice" placeholder="예: 12,510,000" inputmode="numeric">
+                    <div class="input-with-button">
+                        <input type="text" class="ds-input" id="landUnitPrice" placeholder="예: 12,510,000" inputmode="numeric">
+                        <button type="button" class="search-btn ds-btn ds-btn-secondary" id="landLookupBtn">조회</button>
+                    </div>
+                    <p class="apt-lookup-msg ds-help" id="landLookupMsg" role="status">부동산 주소를 입력하고 조회를 누르면 개별공시지가를 가져옵니다. 토지 면적은 직접 입력해 주세요.</p>
 
                     <label class="ds-label" style="margin-top: 12px;">토지 가격 (면적 × 공시지가)</label>
                     <div class="ds-input" id="landPriceDisplay" aria-live="polite">0원</div>
